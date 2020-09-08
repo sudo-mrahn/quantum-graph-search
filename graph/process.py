@@ -59,8 +59,7 @@ def bye_nb(adj, ref, n_bye):
     mat = copy.deepcopy(adj)
     neighbors = np.nonzero(mat[:, ref])[0]  # current neighbors
     if len(neighbors) <= n_bye:
-        print("WARNING: cannot remove all neighbors!")
-        print("It is not good to isolate yourself, you know.")
+        # print("WARNING: cannot remove all neighbors!")
         return mat
 
     bye_list = np.random.choice(neighbors, n_bye, replace=False)  # to delete
@@ -76,8 +75,29 @@ def bye_nb(adj, ref, n_bye):
 
 def bye_st(adj, n_bye):
     """
-    shrinks graph with respect to the reference vertex 0,
+    removes some edges that do not contain vertex 0 from the given graph.
+
+
+    bye_st tries to delete n_bye edges in the nbhd of each non-marked vertex
+    without deleting any edges that connect to the marked vertex.
+
+    if a node has n_bye or less neighbors, by the default behavior of bye_nb it
+    throws a warning and doesn't delete any from that node in that iteration.
+    However, those edges can still be deleted in later iterations on other
+    nodes with larger neighborhoods.
+
+    Therefore in ANY call to this function, it is possible that:
+        a node ends up with only 1 neighbor, the marked vertex
+        a node loses more neighbors than n_bye
+        a node does not lose any neighbors
+            (if it has <= n_bye neighbors, and its edges are never picked in
+            other iterations)
+
+    The total number of edges removed is <= (len(adj) - 1) * n_bye
+
+
     returns adjacency matrix of shrunk graph.
+
 
     adj:        adjacency matrix of graph to be shrunk
     n_bye:       number of edges to delete
@@ -96,6 +116,9 @@ def bye_ev(adj, n_bye):
     returns adjacency matrix of shrunk graph.
     """
     mat = copy.deepcopy(adj)
+
+    for j in range(len(mat)):
+        mat = bye_nb(mat, j, n_bye)
 
     return mat
 
