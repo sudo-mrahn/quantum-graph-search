@@ -147,19 +147,6 @@ def bye_st(adj, n_bye):
                      [np.ones((len(mat), 1)), mat]])
 
 
-def bye_ev(adj, n_bye):
-    """
-    shrinks graph uniformly*
-    returns adjacency matrix of shrunk graph.
-    """
-    mat = copy.deepcopy(adj)
-
-    for j in range(len(mat)):
-        mat = bye_nb(mat, j, n_bye)
-
-    return mat
-
-
 # main method
 if __name__ == "__main__":
     print("yayyy!!!")
