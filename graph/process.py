@@ -14,6 +14,43 @@ import numpy as np
 from graph.attributes import degrees_of
 
 
+def count_edges(adj):
+    """
+    returns number of edges in an undirected graph represented by adj
+    """
+    return int(np.around(np.count_nonzero(adj) / 2))
+
+
+def fill(tree, tot):
+    """
+    given tree graph, add edges randomly so that the graph has tot edges.
+
+    this is an in-place function; it doesn't return any values.
+    """
+
+    n_edges = count_edges(tree)
+    add = tot - n_edges
+    if add <= 0:
+        print("already have that many edges")
+    elif (len(tree) * (len(tree) - 1) / 2) < tot:
+        print("impossible to assign that many")
+    else:
+        zeros = np.transpose(
+            np.nonzero(tree == 0)
+        )  # includes the zeros at self loops, and duplicates upper and lower
+        options = []
+        for _, zero in enumerate(zeros):
+            if zero[0] < zero[1]:
+                options.append(zero)
+        options = np.array(options)
+        chosen = np.random.choice(
+            len(options), add,
+            replace=False)  # chosen edges, by their index in options
+        for k in range(len(chosen)):
+            tree[options[k, 0], options[k, 1]] = 1
+            tree[options[k, 1], options[k, 0]] = 1
+
+
 def pick_nodes(adj_mat, setting, num):
     """
     pick node samples

@@ -27,6 +27,20 @@ def complete(g_size):
     return adj
 
 
+def tree(g_size):
+    """
+    randomly generate a graph (tree) with g_size nodes and g_size-1 edges
+    """
+    adj = np.array([[0, 1], [1, 0]])
+
+    for _ in range(2, g_size):
+        augment = np.zeros((len(adj), 1))
+        link_to = np.random.randint(0, len(adj))
+        augment[link_to, 0] = 1
+        adj = np.block([[adj, augment], [augment.T, 0]])
+    return adj
+
+
 def cycle(graph_size, num_spikes):
     """
     produces an undirected cycle graph of given size.
