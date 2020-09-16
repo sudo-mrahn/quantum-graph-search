@@ -3,8 +3,6 @@ module to create simulation parameters from graphs
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-
-last edited Sep 7 2020
 Temple University
 Department of Mathematics
 """
@@ -56,6 +54,8 @@ def pick_nodes(adj_mat, setting, num):
     pick node samples
     num should be int for setting in ['l', 'h']
     and list for setting == 'm'
+
+    returns 1-d array
     """
     degrees = degrees_of(adj_mat)
     error_message = "invalid input for pick_nodes"
@@ -64,7 +64,7 @@ def pick_nodes(adj_mat, setting, num):
             nodes = np.argwhere(degrees <= num)[:, 0]
         else:
             print(error_message)
-    elif setting in ("medium", "m"):
+    elif setting in ("medium", "med", "m"):
         if isinstance(num, list):
             nodes = np.argwhere(np.isin(degrees, num))[:, 0]
         else:

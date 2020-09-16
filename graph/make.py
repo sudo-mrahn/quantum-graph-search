@@ -3,7 +3,6 @@ module to generate adjacency matrices of graphs.
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-last edited Sep 4 2020
 Temple University
 Department of Mathematics
 """

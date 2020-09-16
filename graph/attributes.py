@@ -3,7 +3,6 @@ module to retrieve various attributes of a graph
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-last edited Aug 31 2020
 Temple University
 Department of Mathematics
 """

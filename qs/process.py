@@ -4,8 +4,6 @@ this contains some useful functions.
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-
-last edited Sep 5 2020
 Temple University
 Department of Mathematics
 """
@@ -67,11 +65,14 @@ def modulus(state):
 
 def search_times(prob, prop):
     """
-    compute search times. input is T by S, where T is total timesteps and S is
-    total number of simulations (samples) run.
+    compute search times. input is either a list of integers, or a 2-d array of
+    dimensions T by S, where T is total timesteps and S is the total number of
+    simulations (samples) run.
 
-    returns a vector of search times corresponding to each QS simulation
+    returns either an int or a 1-d array of integers, i.e. either a search time
+    or a vector of search times corresponding to each QS simulation
     """
+
     time_to_success = None
     if type(prob) is type(np.array([])):  # ignore E721. we do want type
         ncols = len(prob[0, :])

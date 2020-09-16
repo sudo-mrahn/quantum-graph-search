@@ -94,6 +94,7 @@ def prob(state, marked, adj):
     return np.sum((state[:, marked] * adj[:, marked])**2)
 
 
+# -----------------------------------------------------------------------------
 # this is some old code
 # should use a list object instead of a np array for prob_at_marked
 def sample(adj_mat, node_indices, maxss, total_steps, t_1):

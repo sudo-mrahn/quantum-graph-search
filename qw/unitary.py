@@ -3,8 +3,6 @@ module to run the Grover walk on a given graph G
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-
-last edited Sep 4 2020
 Temple University
 Department of Mathematics
 """
@@ -12,6 +10,7 @@ Department of Mathematics
 import numpy as np
 from graph.attributes import find_distances
 from qs.unitary import coin, shift, degrees_of, prob
+from qs.process import initialize
 
 
 def expected_dist(state, node, distances, adj):
@@ -41,14 +40,49 @@ def mean_square_dist(state, marked, distances, adj):
     return msd
 
 
-# run 1 step of quantum walk
 def qwalk(state, deg, adj):
     """
     **corrected version**
 
     run 1 step of qw
+
+    returns a 2-d array containing the quantum state after shift and coin
     """
     return shift(coin(state, deg, adj), adj)
+
+
+def get_ldists(adj, marked, l_type, stop):
+    """
+    simulate a quantum walk for timesteps up to 'stop' while measuring the
+    localization of the quantum state wrt. the marked vertex at each step.
+
+    returns a list of localization measures (mean distance or mean square
+    distance) over all timesteps.
+
+    note that this function usees the unitary quantum operators.
+    """
+
+    distances = find_distances(adj)
+    degrees = degrees_of(adj)
+    ldists = []
+    state = initialize(adj, "n", marked)  # initial quantum state
+
+    for _ in range(stop + 1):
+        if l_type == "md":
+            ldists.append(expected_dist(state, marked, distances, adj))
+        elif l_type == "msd":
+            ldists.append(mean_square_dist(state, marked, distances, adj))
+        else:
+            print("\n\n ERROR: Invalid l_type argument \n\n")
+            return []
+        state = qwalk(state, degrees, adj)
+
+    return ldists
+
+
+# -----------------------------------------------------------------------------
+# This is pretty old code. let's rewrite what we can above.
+# In fact everything below should be deprecated and replaced with new code.
 
 
 def sample_r(adj_mat, marked_node_indices, initial, maxss, total_steps):
