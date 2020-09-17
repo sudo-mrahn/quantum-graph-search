@@ -3,13 +3,12 @@ module to run a modified, non-unitary version of the flip-flop Grover walk
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-
-last edited Sep 4 2020
 Temple University
 Department of Mathematics
 """
 
 import numpy as np
+from qs.process import initialize
 from qs.notunitary import coin, shift, prob
 from graph.attributes import find_distances, degrees_of
 
@@ -45,6 +44,37 @@ def qwalk(state, deg, adj):
     return shift(coin(state, deg, adj))
 
 
+def get_ldists(adj, marked, l_type, stop):
+    """
+    simulate a quantum walk for timesteps up to 'stop' while measuring the
+    localization of the quantum state wrt. the marked vertex at each step.
+
+    returns a list of localization measures (mean distance or mean square
+    distance) over all timesteps.
+
+    note that this function usees the non-unitary quantum operators.
+    """
+
+    distances = find_distances(adj)
+    degrees = degrees_of(adj)
+    ldists = []
+    state = initialize(adj, "loop", marked)  # initial quantum state
+
+    for _ in range(stop + 1):
+        if l_type == "md":
+            ldists.append(expected_dist(state, marked, distances))
+        elif l_type == "msd":
+            ldists.append(mean_square_dist(state, marked, distances))
+        else:
+            print("\n\n ERROR: Invalid l_type argument \n\n")
+            return []
+        state = qwalk(state, degrees, adj)
+
+    return ldists
+
+
+# -----------------------------------------------------------------------------
+# old code. probably needs to be deprecated
 def sample_r(adj_mat, marked_node_indices, initial, maxss, total_steps):
     """
     run qw on given sample of nodes
