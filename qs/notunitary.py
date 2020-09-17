@@ -1,16 +1,16 @@
 """
-module to run a modified, non-unitary version of the flip-flop Grover search on
-a given graph G
+module to run the non-unitary (non-quantum) version of the flip-flop Grover
+search on a given graph
 
 created by Alex Ahn
 alex.song.ahn@gmail.com
-last edited Sep 4 2020
 Temple University
 Department of Mathematics
 """
 
 import numpy as np
 from graph.attributes import degrees_of
+from qs.process import initialize
 
 
 # uncorrected operators
@@ -78,6 +78,28 @@ def prob(state, vertex):
     """
     neighborhood = state[:, vertex]
     return np.sum(neighborhood**2)
+
+
+def simulate(adj, marked, t_1, stop):
+    """
+    many iterations of the quantum search.
+    returns an array (list) of probabilities at the marked vertex.
+
+    stop: total number of qs iterations
+    """
+
+    deg = degrees_of(adj)
+    pr_marked = []
+    state = initialize(adj)  # uniform distribution initial state
+
+    for _ in range(stop + 1):
+        pr_marked.append(prob(state, marked))
+        state = qsearch(state, deg, adj, marked, t_1)
+    return pr_marked
+
+
+# -----------------------------------------------------------------------------
+# old code. probably needs to be rewritten and deprecated
 
 
 def sample(adj_mat, node_indices, maxss, total_steps, t_1):
