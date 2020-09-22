@@ -147,6 +147,24 @@ def bye_st(adj, n_bye):
                      [np.ones((len(mat), 1)), mat]])
 
 
+def bye_cp(adj, r_out, r_in):
+    """
+    removes r_out edges from outside the marked nbhd, and r_in edges from
+    inside the marked nbhd.
+
+    it is assumed that marked=0.
+
+    returns updated adjacency matrix.
+    """
+    marked = 0
+
+    # first remove outside nbhd
+    out_removed = bye_st(adj, r_out)
+
+    # now do inside nbhd
+    return bye_nb(out_removed, marked, r_in)
+
+
 # main method
 if __name__ == "__main__":
     print("yayyy!!!")
