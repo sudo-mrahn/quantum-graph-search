@@ -12,6 +12,14 @@ import numpy as np
 from graph.attributes import degrees_of
 
 
+def quarterly(count, total):
+    """
+    display quarterly progress, measured by proportion of count / total.
+    """
+    if count in np.arange(int(total / 4), total + 1, int(total / 4)):
+        print("%.f%% complete" % (100 * count / total))
+
+
 def initialize(adj, mode=None, marked=None):
     """
     define an initial state: given adj matrix and marked node,
