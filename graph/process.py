@@ -8,6 +8,7 @@ Department of Mathematics
 """
 
 import copy
+import random
 import numpy as np
 from graph.attributes import degrees_of, is_connected
 
@@ -17,6 +18,33 @@ def count_edges(adj):
     returns number of edges in an undirected graph represented by adj
     """
     return int(np.around(np.count_nonzero(adj) / 2))
+
+
+def fill_out(adj, n_add):
+    """
+    assuming marked = 0, randomly add the given number of edges to the subgraph
+    G - marked.
+
+    note that the edges in the nbhd of 0 are not modified.
+
+    returns the augmented adjacency matrix
+    """
+
+    subgraph = copy.deepcopy(adj[1:, 1:])
+    temp = np.nonzero(np.triu(subgraph == 0, 1))  # unique empty edge slots
+
+    # make into a list of lists
+    edge_pool = [list(elem) for elem in list(zip(temp[0], temp[1]))]
+    random.shuffle(edge_pool)  # shuffle the order
+
+    # since we shuffled, randomly choosing n_add elements is same as picking
+    # the first n_add elements
+    for pick in edge_pool[:n_add]:
+        subgraph[pick[0], pick[1]] = 1
+        subgraph[pick[1], pick[0]] = 1  # add both directions
+
+    return np.block([[0, adj[0, 1:]],
+                     [adj[1:, 0].reshape(len(subgraph), 1), subgraph]])
 
 
 def fill(tree, tot):
@@ -149,6 +177,9 @@ def bye_st(adj, n_bye):
 
 def bye_cp(adj, r_out, r_in):
     """
+    note: there is an unknown problem with this code. it does not reproduce
+    some expected results.
+
     removes r_out edges from outside the marked nbhd, and r_in edges from
     inside the marked nbhd.
 
