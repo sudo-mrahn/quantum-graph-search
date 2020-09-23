@@ -9,7 +9,7 @@ Department of Mathematics
 
 import copy
 import numpy as np
-from graph.attributes import degrees_of
+from graph.attributes import degrees_of, is_connected
 
 
 def count_edges(adj):
@@ -158,11 +158,12 @@ def bye_cp(adj, r_out, r_in):
     """
     marked = 0
 
-    # first remove outside nbhd
-    out_removed = bye_st(adj, r_out)
-
-    # now do inside nbhd
-    return bye_nb(out_removed, marked, r_in)
+    mat = copy.deepcopy(adj)
+    mat = bye_nb(mat, marked, r_in)
+    temp = bye_st(mat, r_out)
+    while not is_connected(temp):
+        temp = bye_st(mat, r_out)
+    return temp
 
 
 # main method
