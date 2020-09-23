@@ -43,6 +43,7 @@ def degrees_of(adj_mat):
 def get_eigs_sym(adj_mat):
     """
     returns an array of eigenvalues of a symmetric matrix
+    eigenvalues are stored in ascending order
     """
     return la.eigvalsh(adj_mat)
 
@@ -75,7 +76,6 @@ def is_connected(adj):
     adjacency matrix of the graph.
     """
     eigs = get_eigs_sym(np.diag(degrees_of(adj)) - adj)
-    print("are the eigs sorted? " + str(np.all(np.diff(eigs) >= 0)))
 
     return eigs[1] > 0
 
