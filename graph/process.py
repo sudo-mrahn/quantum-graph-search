@@ -47,6 +47,26 @@ def fill_out(adj, n_add):
                      [adj[1:, 0].reshape(len(subgraph), 1), subgraph]])
 
 
+def fill_out_upto(adj, total):
+    """
+    assuming marked = 0, randomly add edges to the subgraph G - marked until
+    the number of edges in the subgraph is equal to 'total'.
+
+    returns the augmented adjacency matrix.
+    """
+
+    # figure out how much more we need to add
+    subgraph = copy.deepcopy(adj[1:, 1:])
+    n_now = len(np.nonzero(np.triu(subgraph, 1))[0])
+    n_more = total - n_now
+
+    if n_more <= 0:
+        print("\n\nERROR: number of edges are already that high\n\n")
+        return []
+
+    return fill_out(adj, n_more)
+
+
 def fill(tree, tot):
     """
     given tree graph, add edges randomly so that the graph has tot edges.
