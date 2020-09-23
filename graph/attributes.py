@@ -62,6 +62,24 @@ def get_gap(mat):
     return eigs[-1] - max(np.abs(eigs[:-1]))
 
 
+def is_connected(adj):
+    """
+    returns True if adj is the adjacency matrix of a connected graph
+    False if not.
+
+    this method uses the property of the Fiedler eigenvalue, namely that it is
+    positive if and only if the graph is connected.
+
+    Fiedler eigenvalue is defined to be the second smallest eigenvalue of the
+    graph laplacian matrix, L = D - A, where D is the degree matrix and A the
+    adjacency matrix of the graph.
+    """
+    eigs = get_eigs_sym(np.diag(degrees_of(adj)) - adj)
+    print("are the eigs sorted? " + str(np.all(np.diff(eigs) >= 0)))
+
+    return eigs[1] > 0
+
+
 def plot_eigs(spect, threshold):
     """
     plots and saves a figure showing the given set of eigenvalues
