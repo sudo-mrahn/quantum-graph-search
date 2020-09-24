@@ -20,12 +20,30 @@ def count_edges(adj):
     return int(np.around(np.count_nonzero(adj) / 2))
 
 
+def fill_in(adj, n_add):
+    """
+    randomly add n_add edges to the nbhd of 0.
+
+    returns the augmented adjacency matrix.
+    """
+    # get deep copy
+    mat = copy.deepcopy(adj)
+
+    # get the indices of vertices not yet connected to 0
+    edge_pool = np.nonzero(adj[0, :] == 0)[0][1:]  # [1:] to exclude 0 itself
+    chosen_ones = np.random.choice(edge_pool, n_add, replace=False)
+    for i in chosen_ones:
+        mat[0, i] = 1
+        mat[i, 0] = 1
+    return mat
+
+
 def fill_out(adj, n_add):
     """
     assuming marked = 0, randomly add the given number of edges to the subgraph
     G - marked.
 
-    note that the edges in the nbhd of 0 are not modified.
+    the nbhd of 0 is not modified.
 
     returns the augmented adjacency matrix
     """
@@ -52,6 +70,8 @@ def fill_out_upto(adj, total):
     assuming marked = 0, randomly add edges to the subgraph G - marked until
     the number of edges in the subgraph is equal to 'total'.
 
+    the nbhd of 0 is not modified.
+
     returns the augmented adjacency matrix.
     """
 
@@ -60,7 +80,7 @@ def fill_out_upto(adj, total):
     n_now = len(np.nonzero(np.triu(subgraph, 1))[0])
     n_more = total - n_now
 
-    if n_more <= 0:
+    if n_more < 0:
         print("\n\nERROR: number of edges are already that high\n\n")
         return []
 
