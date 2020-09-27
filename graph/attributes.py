@@ -9,6 +9,7 @@ Department of Mathematics
 
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
 from numpy import linalg as la
 from scipy.sparse.csgraph import shortest_path
 
@@ -63,25 +64,36 @@ def get_gap(mat):
     return eigs[-1] - max(np.abs(eigs[:-1]))
 
 
+# This thing does NOT always match the results of nx.is_connected(graph).
+# Don't know why it doesn't work. Deprecated.
+#
+# def is_connected(adj):
+#     """
+#     returns True if adj is the adjacency matrix of a connected graph
+#     False if not.
+#
+#     this method uses the property of the Fiedler eigenvalue, namely that it's
+#     positive if and only if the graph is connected.
+#
+#     Fiedler eigenvalue is defined to be the second smallest eigenvalue of the
+#     graph laplacian matrix, L = D - A, where D is the degree matrix and A the
+#     adjacency matrix of the graph.
+#     """
+#
+#     # don't use this for large graphs
+#     assert len(adj) < 3000
+#
+#     eigs = get_eigs_sym(np.diag(degrees_of(adj)) - adj)
+#
+#     return eigs[1] > 0
+
+
 def is_connected(adj):
     """
-    returns True if adj is the adjacency matrix of a connected graph
-    False if not.
-
-    this method uses the property of the Fiedler eigenvalue, namely that it is
-    positive if and only if the graph is connected.
-
-    Fiedler eigenvalue is defined to be the second smallest eigenvalue of the
-    graph laplacian matrix, L = D - A, where D is the degree matrix and A the
-    adjacency matrix of the graph.
+    check if graph is connected.
     """
-
-    # don't use this for large graphs
-    assert len(adj) < 3000
-
-    eigs = get_eigs_sym(np.diag(degrees_of(adj)) - adj)
-
-    return eigs[1] > 0
+    graph = nx.Graph(adj)
+    return nx.is_connected(graph)
 
 
 def plot_eigs(spect, threshold):
