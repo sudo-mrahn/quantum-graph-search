@@ -10,6 +10,7 @@ Department of Mathematics
 import numpy as np
 import numpy.random as rd
 from scipy.linalg import block_diag
+from graph.attributes import is_connected
 
 
 def complete(g_size):
@@ -104,6 +105,22 @@ def barabasi(graph_size, m_0):
 
 
 def erdos(g_size, n_comm, p_in, p_out=None):
+    """
+    same as erdos_nnconn defined below, except that it either returns a
+    connected graph or an assertion error.
+    """
+    params = (g_size, n_comm, p_in, p_out)
+
+    adj, communities = erdos_nnconn(*params)
+    count = 0
+    while not is_connected(adj):
+        adj, communities = erdos_nnconn(*params)
+        count += 1
+        assert count < 100  # don't try for a connected graph >100 times
+    return adj, communities
+
+
+def erdos_nnconn(g_size, n_comm, p_in, p_out=None):
     """
     Erdos-Renyi model. note that this graph is not necessarily connected!
 
