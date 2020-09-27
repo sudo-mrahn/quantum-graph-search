@@ -75,6 +75,10 @@ def is_connected(adj):
     graph laplacian matrix, L = D - A, where D is the degree matrix and A the
     adjacency matrix of the graph.
     """
+
+    # don't use this for large graphs
+    assert len(adj) < 3000
+
     eigs = get_eigs_sym(np.diag(degrees_of(adj)) - adj)
 
     return eigs[1] > 0

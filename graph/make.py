@@ -107,9 +107,9 @@ def erdos(g_size, n_comm, p_in, p_out=None):
     """
     Erdos-Renyi model. note that this graph is not necessarily connected!
 
-    The model implemented here is actually the stochastic block model, which is
-    a broader class of random graph model than the ER model, where the size of
-    each community is taken to be approximately equal.
+    The model implemented here is actually the stochastic block model,
+    a broader class of random graph model than the ER model,
+    in which I have taken the size of each community to be approximately equal.
 
     parameters
     g_size:     number of vertices in graph
