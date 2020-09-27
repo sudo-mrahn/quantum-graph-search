@@ -101,3 +101,64 @@ def barabasi(graph_size, m_0):
                     graph[current_size, k] = roll
 
     return graph
+
+
+def erdos(g_size, n_comm, p_in, p_out=None):
+    """
+    Erdos-Renyi model. note that this graph is not necessarily connected!
+
+    The model implemented here is actually the stochastic block model, which is
+    a broader class of random graph model than the ER model, where the size of
+    each community is taken to be approximately equal.
+
+    parameters
+    g_size:     number of vertices in graph
+    n_comm:     number of communities, i.e. partitions of graph vertices
+    p_in:       prob that two vertices in the same community will have an edge
+    p_out:      prob that two vertices in different communities will have an
+                edge
+
+    note that if p_in = p_out, we recover the G(n,p) version of the ER model.
+    this can be done explicitly, or by leaving out the last arg 'p_out'
+
+    if p_in > p_out, the graph is called assortative
+    if p_in < p_out, the graph is called disassortative
+
+    returns adjacency matrix
+    """
+
+    if p_out is None:
+        p_out = p_in
+
+    # partition the graph into communities
+    communities = np.array_split(np.arange(g_size), n_comm)
+
+    # list of community sizes
+    c_sizes = [len(communities[i]) for i in range(n_comm)]
+
+    adj = np.zeros((c_sizes[0], c_sizes[0]))
+    triu_ind = np.triu_indices(c_sizes[0], k=1)
+    adj[triu_ind] = list(
+        np.random.binomial(1, p_in, int((c_sizes[0] * (c_sizes[0] - 1)) / 2)))
+    so_far = c_sizes[0]
+
+    for j in range(1, n_comm):
+        pawnee = np.zeros((c_sizes[j], c_sizes[j]))
+        triu_ind = np.triu_indices(c_sizes[j], k=1)
+        pawnee[triu_ind] = list(
+            np.random.binomial(1, p_in, int(
+                (c_sizes[j] * (c_sizes[j] - 1)) / 2)))
+
+        eagleton = np.random.binomial(1, p_out,
+                                      int(so_far * c_sizes[j])).reshape(
+                                          so_far, c_sizes[j])
+
+        adj = np.block([[adj, eagleton],
+                        [np.zeros((c_sizes[j], so_far)), pawnee]])
+
+        so_far += c_sizes[j]
+
+    tril = np.tril_indices(g_size, k=-1)
+    adj[tril] = adj.T[tril]
+
+    return adj, communities
