@@ -104,7 +104,41 @@ def barabasi(graph_size, m_0):
     return graph
 
 
-def erdos(g_size, n_comm, p_in, p_out=None):
+def erdos_orig(g_size):
+    """
+    pre-defined original erdos-renyi graph. equivalent to G(g_size, prob)
+
+    returns the adjacency matrix.
+    """
+
+    prob = 0.01
+    adj, _ = erdos_planted(g_size, 1, prob)
+    return adj
+
+
+def erdos_a(g_size):
+    """
+    pre-defined assortative stochastic block graph.
+
+    returns the adjacency matrix.
+    """
+    p_in, p_out, n_comm = 0.1, 0.0001, 6
+    adj, _ = erdos_planted(g_size, n_comm, p_in, p_out)
+    return adj
+
+
+def erdos_d(g_size):
+    """
+    pre-defined disassortative stochastic block graph.
+
+    returns the adjacency matrix.
+    """
+    p_in, p_out, n_comm = 0.0001, 0.1, 6
+    adj, _ = erdos_planted(g_size, n_comm, p_in, p_out)
+    return adj
+
+
+def erdos_planted(g_size, n_comm, p_in, p_out=None):
     """
     same as erdos_nnconn defined below, except that it either returns a
     connected graph or an assertion error.
