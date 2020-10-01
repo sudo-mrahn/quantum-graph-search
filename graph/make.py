@@ -104,6 +104,21 @@ def barabasi(graph_size, m_0):
     return graph
 
 
+def erdos(g_size, subtype):
+    """
+    convenience function to defin the properties of the erdos-renyi graph to be
+    used in deg_distr
+    """
+
+    if subtype == "o":
+        adj = erdos_orig(g_size)
+    elif subtype == "a":
+        adj = erdos_a(g_size)
+    elif subtype == "d":
+        adj = erdos_d(g_size)
+    return adj
+
+
 def erdos_orig(g_size):
     """
     pre-defined original erdos-renyi graph. equivalent to G(g_size, prob)
