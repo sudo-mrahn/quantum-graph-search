@@ -119,25 +119,25 @@ def barabasi(graph_size, m_0):
     if m_0 > graph_size:
         raise ValueError("m_0 cannot exceed graph_size")
 
-    graph = complete(m_0)
+    adj = complete(m_0)
     for _ in range(m_0, graph_size):
-        current_size = len(graph[0, :])
-        edge_prob = np.count_nonzero(graph, axis=0).astype(float)
+        current_size = len(adj[0, :])
+        edge_prob = np.count_nonzero(adj, axis=0).astype(float)
         edge_prob = edge_prob / np.sum(edge_prob)
 
         # make the adjacency matrix one node bigger
-        graph = np.append(graph, np.zeros((current_size, 1)), axis=1)
-        graph = np.append(graph, np.zeros((1, current_size + 1)), axis=0)
+        adj = np.append(adj, np.zeros((current_size, 1)), axis=1)
+        adj = np.append(adj, np.zeros((1, current_size + 1)), axis=0)
 
         # roll to get new edges (roll until success)
-        while np.count_nonzero(graph[:, current_size]) == 0:
+        while np.count_nonzero(adj[:, current_size]) == 0:
             for k, probability in enumerate(edge_prob):
                 roll = np.random.binomial(1, probability)
                 if roll != 0:  # make sure to add both directions
-                    graph[k, current_size] = roll
-                    graph[current_size, k] = roll
+                    adj[k, current_size] = roll
+                    adj[current_size, k] = roll
 
-    return graph
+    return adj
 
 
 def erdos(g_size, subtype):
@@ -248,17 +248,19 @@ def erdos_nnconn(g_size, n_comm, p_in, p_out=None):
     communities = np.array_split(np.arange(g_size), n_comm)
 
     # list of community sizes
-    c_sizes = [len(community) for community in communities]
+    community_sizes = [len(community) for community in communities]
 
-    adj = _sample_symmetric_block(c_sizes[0], p_in)
-    so_far = c_sizes[0]
+    adj = _sample_symmetric_block(community_sizes[0], p_in)
+    existing_size = community_sizes[0]
 
     for j in range(1, n_comm):
-        pawnee = _sample_symmetric_block(c_sizes[j], p_in)
-        eagleton = np.random.binomial(1, p_out, so_far * c_sizes[j]).reshape(
-            so_far, c_sizes[j]
+        community_block = _sample_symmetric_block(community_sizes[j], p_in)
+        cross_edges = np.random.binomial(
+            1, p_out, existing_size * community_sizes[j]
+        ).reshape(
+            existing_size, community_sizes[j]
         )
-        adj = np.block([[adj, eagleton], [eagleton.T, pawnee]])
-        so_far += c_sizes[j]
+        adj = np.block([[adj, cross_edges], [cross_edges.T, community_block]])
+        existing_size += community_sizes[j]
 
     return adj, communities

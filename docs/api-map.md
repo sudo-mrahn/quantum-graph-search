@@ -56,12 +56,14 @@ Primary public entry points:
 - `quantum_graph_search.quantum_walk.qwalk`
 - `quantum_graph_search.quantum_walk.expected_dist`
 - `quantum_graph_search.quantum_walk.mean_square_dist`
-- `quantum_graph_search.quantum_walk.get_ldists`
 - `quantum_graph_search.quantum_walk.get_mean_distance_series`
 - `quantum_graph_search.quantum_walk.get_mean_square_distance_series`
 - `quantum_graph_search.quantum_walk.get_lt`
 
 These are the canonical entry points for the unitary quantum-walk workflow.
+The older selector-style `quantum_graph_search.quantum_walk.get_ldists` helper
+is retained for compatibility, but new code is clearer when it calls one of
+the explicit series functions above.
 
 ### quantum_graph_search.classical_walk
 

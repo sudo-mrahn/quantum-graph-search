@@ -28,17 +28,18 @@ Typical path:
 
 1. Generate or load an adjacency matrix with `quantum_graph_search.graph`.
 2. Choose a marked node.
-3. Run `quantum_graph_search.quantum_walk.get_ldists`.
+3. Run `quantum_graph_search.quantum_walk.get_mean_distance_series` or
+   `quantum_graph_search.quantum_walk.get_mean_square_distance_series`.
 4. Inspect the mean distance or mean square distance from the marked node.
 
 Minimal example:
 
 ```python
 from quantum_graph_search.graph import complete
-from quantum_graph_search.quantum_walk import get_ldists
+from quantum_graph_search.quantum_walk import get_mean_distance_series
 
 adj = complete(6)
-mean_distance = get_ldists(adj, marked=0, l_type="md", stop=10)
+mean_distance = get_mean_distance_series(adj, marked=0, stop=10)
 ```
 
 ## 3. Graph Variants for Experiments
@@ -55,3 +56,7 @@ part of the original research workflow. Public readers should start with
 `quantum_graph_search.quantum_search` and
 `quantum_graph_search.quantum_walk` first and only use the non-unitary
 variants when they need that specific comparison.
+
+The selector-style `get_ldists()` helper is still available for compatibility,
+but new code is usually clearer when it calls the explicit mean-distance or
+mean-square-distance series function directly.

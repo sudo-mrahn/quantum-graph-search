@@ -1,16 +1,15 @@
 """Unitary flip-flop Grover search on dense graph adjacency matrices."""
 
-import numpy as np
 import warnings
+import numpy as np
 
-from qs._simulation import run_probability_series, sample_probability_series
+from qs._legacy_sampling import sample_marked_probability_series
+from qs._simulation import run_probability_series
 
 
-# corrected operators
-# i.e. these are unitary.
 def oracle(state, marked_node, adj):
     """
-    unitary oracle operator
+    Apply the marked-vertex oracle for the unitary search model.
     """
     new_state = np.array(state, dtype=float, copy=True)
     new_state[:, marked_node] -= (
@@ -21,13 +20,10 @@ def oracle(state, marked_node, adj):
 
 def coin(state, deg, adj):
     """
-    unitary version of the coin operator
+    Apply the Grover coin on the directed-edge Hilbert space.
 
-    i.e. the Hilbert space acted on by this function is NOT the augmented
-    Hilbert space of the directed edges of the completion of the graph
-    represented by the adjacency matrix input.
-
-    rather, it is the proper Hilbert space of directed edges represented in adj
+    This acts on the directed edges present in ``adj``, not on an augmented
+    completion of the graph.
     """
 
     new_state = np.array(state, dtype=float, copy=True)
@@ -43,15 +39,14 @@ def coin(state, deg, adj):
 
 def shift(state, adj):
     """
-    unitary shift operator
+    Swap edge directions after masking by the graph adjacency.
     """
     return (state * adj).T
 
 
 def qsearch(state, deg, adj, marked_node, t_1):
     """
-    one iteration of the quantum search
-    returns a new quantum state after applying the qs operator
+    Run one quantum-search iteration and return the next state.
 
     state: input quantum state in the form of a 2-d array
     deg: 1-d array of degrees of the vertex identified with the array index
@@ -69,8 +64,7 @@ def qsearch(state, deg, adj, marked_node, t_1):
 
 def simulate(adj, marked, t_1, stop):
     """
-    many iterations of the quantum search.
-    returns an array (list) of probabilities at the marked vertex.
+    Run the unitary quantum-search time series.
 
     stop: total number of qs iterations
     """
@@ -82,24 +76,22 @@ def simulate(adj, marked, t_1, stop):
         step_fn=lambda state, degrees, graph, marked_node: qsearch(
             state, degrees, graph, marked_node, t_1
         ),
-        probability_fn=lambda state, marked_node, graph: prob(
-            state, marked_node, graph
-        ),
+        probability_fn=prob,
     )
 
 
 def prob(state, marked, adj):
     """
-    corrected probability at given vertex
+    Return the probability mass at ``marked``.
     """
-    return np.sum((state[:, marked] * adj[:, marked])**2)
+    return np.sum((state[:, marked] * adj[:, marked]) ** 2)
 
 
 def _sample_probabilities(adj_mat, node_indices, maxss, total_steps, t_1):
     """
-    legacy helper that samples probabilities for multiple marked nodes.
+    Run the historical multi-marked-node sampling workflow.
     """
-    return sample_probability_series(
+    return sample_marked_probability_series(
         adj_mat,
         node_indices,
         maxss,
@@ -107,9 +99,7 @@ def _sample_probabilities(adj_mat, node_indices, maxss, total_steps, t_1):
         step_fn=lambda state, degrees, graph, marked_node: qsearch(
             state, degrees, graph, marked_node, t_1
         ),
-        probability_fn=lambda state, marked_node, graph: prob(
-            state, marked_node, graph
-        ),
+        probability_fn=prob,
     )
 
 

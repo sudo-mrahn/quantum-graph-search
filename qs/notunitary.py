@@ -1,9 +1,10 @@
 """Non-unitary Grover-search variants used in research experiments."""
 
-import numpy as np
 import warnings
+import numpy as np
 
-from qs._simulation import run_probability_series, sample_probability_series
+from qs._legacy_sampling import sample_marked_probability_series
+from qs._simulation import run_probability_series
 
 
 # uncorrected operators
@@ -93,9 +94,9 @@ def simulate(adj, marked, t_1, stop):
 
 def _sample_probabilities(adj_mat, node_indices, maxss, total_steps, t_1):
     """
-    legacy helper that samples probabilities for multiple marked nodes.
+    Run the historical multi-marked-node sampling workflow.
     """
-    return sample_probability_series(
+    return sample_marked_probability_series(
         adj_mat,
         node_indices,
         maxss,

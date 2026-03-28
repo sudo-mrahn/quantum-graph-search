@@ -1,4 +1,8 @@
-"""Namespaced graph API for quantum-graph-search."""
+"""Canonical graph import surface for ``quantum_graph_search``.
+
+The current implementations still live in the legacy ``graph`` package while
+the namespace transition remains in progress.
+"""
 
 from graph import (
     barabasi,

@@ -1,12 +1,12 @@
 """Non-unitary Grover-walk variants used in research experiments."""
 
-import numpy as np
 import warnings
+import numpy as np
 
+from qw._legacy_sampling import sample_localization_measure_series
 from qw._localization import (
     resolve_localization_series,
     run_localization_series,
-    sample_localization_series,
 )
 from qs.process import initialize_loop_state
 from qs.notunitary import coin, shift, prob
@@ -77,13 +77,10 @@ def get_mean_square_distance_series(adj, marked, stop):
 
 def get_ldists(adj, marked, l_type, stop):
     """
-    simulate a quantum walk for timesteps up to 'stop' while measuring the
-    localization of the quantum state wrt. the marked vertex at each step.
+    Compatibility wrapper over the explicit localization-series helpers.
 
-    returns a list of localization measures (mean distance or mean square
-    distance) over all timesteps.
-
-    note that this function usees the non-unitary quantum operators.
+    New code should prefer ``get_mean_distance_series()`` or
+    ``get_mean_square_distance_series()`` directly.
     """
 
     series_fn = resolve_localization_series(
@@ -95,7 +92,11 @@ def get_ldists(adj, marked, l_type, stop):
 def _sample_localization(
     adj_mat, marked_node_indices, initial, maxss, total_steps, measure
 ):
-    return sample_localization_series(
+    """
+    Run the historical multi-marked-node localization workflow.
+    """
+
+    return sample_localization_measure_series(
         adj_mat,
         marked_node_indices,
         initial,

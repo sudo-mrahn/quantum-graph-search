@@ -70,7 +70,7 @@ import numpy as np
 
 from quantum_graph_search.graph import complete
 from quantum_graph_search.quantum_search import simulate as simulate_qs
-from quantum_graph_search.quantum_walk import get_ldists
+from quantum_graph_search.quantum_walk import get_mean_distance_series
 
 np.random.seed(0)
 
@@ -78,7 +78,7 @@ adj = complete(6)
 marked = 0
 
 qs_probabilities = simulate_qs(adj, marked=marked, t_1=1, stop=5)
-qw_mean_distance = get_ldists(adj, marked=marked, l_type="md", stop=5)
+qw_mean_distance = get_mean_distance_series(adj, marked=marked, stop=5)
 
 print(qs_probabilities)
 print(qw_mean_distance)
@@ -88,6 +88,9 @@ See [`examples/basic_usage.py`](examples/basic_usage.py) for a runnable
 example.
 
 See [`docs/migration.md`](docs/migration.md) for the old-to-new import map.
+For new quantum-walk code, prefer
+`get_mean_distance_series()` / `get_mean_square_distance_series()` over the
+older selector-style `get_ldists()` wrapper.
 
 ## Repository Layout
 

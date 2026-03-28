@@ -4,7 +4,7 @@ import numpy as np
 
 from quantum_graph_search.graph import erdos_planted
 from quantum_graph_search.quantum_search import simulate as simulate_qs
-from quantum_graph_search.quantum_walk import get_ldists
+from quantum_graph_search.quantum_walk import get_mean_square_distance_series
 
 
 def main():
@@ -14,7 +14,7 @@ def main():
     marked = int(communities[0][0])
 
     qs_probabilities = simulate_qs(adj, marked=marked, t_1=1, stop=8)
-    qw_msd = get_ldists(adj, marked=marked, l_type="msd", stop=8)
+    qw_msd = get_mean_square_distance_series(adj, marked=marked, stop=8)
 
     print("Marked node:", marked)
     print("Community sizes:", [len(comm) for comm in communities])
