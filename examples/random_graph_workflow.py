@@ -2,9 +2,9 @@
 
 import numpy as np
 
-from graph import erdos_planted
-from qs import simulate as simulate_qs
-from qw import get_ldists
+from quantum_graph_search.graph import erdos_planted
+from quantum_graph_search.quantum_search import simulate as simulate_qs
+from quantum_graph_search.quantum_walk import get_ldists
 
 
 def main():

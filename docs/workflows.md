@@ -7,16 +7,16 @@ top of dense adjacency matrices.
 
 Typical path:
 
-1. Generate or load an adjacency matrix with `graph.make`.
+1. Generate or load an adjacency matrix with `quantum_graph_search.graph`.
 2. Choose a marked node.
-3. Run `qs.unitary.simulate`.
+3. Run `quantum_graph_search.quantum_search.simulate`.
 4. Inspect the probability at the marked node over time.
 
 Minimal example:
 
 ```python
-from graph.make import complete
-from qs.unitary import simulate
+from quantum_graph_search.graph import complete
+from quantum_graph_search.quantum_search import simulate
 
 adj = complete(6)
 probabilities = simulate(adj, marked=0, t_1=1, stop=10)
@@ -26,16 +26,16 @@ probabilities = simulate(adj, marked=0, t_1=1, stop=10)
 
 Typical path:
 
-1. Generate or load an adjacency matrix with `graph.make`.
+1. Generate or load an adjacency matrix with `quantum_graph_search.graph`.
 2. Choose a marked node.
-3. Run `qw.unitary.get_ldists`.
+3. Run `quantum_graph_search.quantum_walk.get_ldists`.
 4. Inspect the mean distance or mean square distance from the marked node.
 
 Minimal example:
 
 ```python
-from graph.make import complete
-from qw.unitary import get_ldists
+from quantum_graph_search.graph import complete
+from quantum_graph_search.quantum_walk import get_ldists
 
 adj = complete(6)
 mean_distance = get_ldists(adj, marked=0, l_type="md", stop=10)
@@ -45,11 +45,13 @@ mean_distance = get_ldists(adj, marked=0, l_type="md", stop=10)
 
 The functions in `graph.process` support perturbing or modifying graphs for
 research experiments. They are useful, but are better viewed as experiment
-helpers than as a polished stable API.
+helpers than as a polished stable API and are intentionally left outside the
+new canonical namespace.
 
 ## 4. Non-unitary Variants
 
 The `qs.notunitary` and `qw.notunitary` modules are retained because they were
-part of the original research workflow. Public readers should start with the
-unitary modules first and only use the non-unitary variants when they need that
-specific comparison.
+part of the original research workflow. Public readers should start with
+`quantum_graph_search.quantum_search` and
+`quantum_graph_search.quantum_walk` first and only use the non-unitary
+variants when they need that specific comparison.

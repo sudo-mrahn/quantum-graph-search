@@ -11,13 +11,15 @@ general-purpose graph library.
 
 ## Scope
 
-The current public code surface is:
+The canonical public code surface is now namespaced under
+`quantum_graph_search`:
 
-- `graph/` for graph construction, graph attributes, and experiment-support
-  graph transformations
-- `qs/` for unitary and non-unitary quantum search routines
-- `qw/` for unitary and non-unitary quantum walk/localization routines
-- `cw/` for simple classical walk utilities
+- `quantum_graph_search.graph` for graph construction and graph attributes
+- `quantum_graph_search.quantum_search` for unitary and non-unitary quantum
+  search routines
+- `quantum_graph_search.quantum_walk` for unitary and non-unitary quantum
+  walk/localization routines
+- `quantum_graph_search.classical_walk` for simple classical walk utilities
 
 Historical implementations that are kept for reference live under
 `archive/legacy/`.
@@ -25,9 +27,9 @@ Historical implementations that are kept for reference live under
 Exploratory notebook material lives under `notebooks/` and is not part of the
 supported API.
 
-The repository name is `quantum-graph-search`, while the Python
-import packages remain `graph`, `qs`, `qw`, and `cw` for compatibility in this
-Stage 1 cleanup pass.
+The older top-level Python packages `graph`, `qs`, `qw`, and `cw` are still
+shipped as compatibility layers during the namespace transition, but new code
+should prefer `quantum_graph_search.*`.
 
 ## Core Concepts
 
@@ -66,9 +68,9 @@ pip install -r requirements.txt
 ```python
 import numpy as np
 
-from graph.make import complete
-from qs.unitary import simulate as simulate_qs
-from qw.unitary import get_ldists
+from quantum_graph_search.graph import complete
+from quantum_graph_search.quantum_search import simulate as simulate_qs
+from quantum_graph_search.quantum_walk import get_ldists
 
 np.random.seed(0)
 
@@ -85,16 +87,24 @@ print(qw_mean_distance)
 See [`examples/basic_usage.py`](examples/basic_usage.py) for a runnable
 example.
 
+See [`docs/migration.md`](docs/migration.md) for the old-to-new import map.
+
 ## Repository Layout
 
+- [`quantum_graph_search/`](quantum_graph_search)
+  Canonical namespaced public API for the package.
 - [`graph/`](graph)
-  Core graph generation and graph-processing helpers.
+  Legacy compatibility package for graph generation and graph-processing
+  helpers.
 - [`qs/`](qs)
-  Quantum search operators and supporting utilities.
+  Legacy compatibility package for quantum search operators and supporting
+  utilities.
 - [`qw/`](qw)
-  Quantum walk localization and linear-transformation helpers.
+  Legacy compatibility package for quantum walk localization and
+  linear-transformation helpers.
 - [`cw/`](cw)
-  Classical random walk utilities and a small CLI-oriented script.
+  Legacy compatibility package for classical random walk utilities and a small
+  CLI-oriented script.
 - [`archive/legacy/`](archive/legacy)
   Historical implementations retained for reference.
 - [`notebooks/`](notebooks)
@@ -113,6 +123,8 @@ example.
   implementation surface.
 - Some utilities are research-grade and intentionally compact. The repository
   favors readability and reproducibility over a fully productized API.
+- New code should prefer `quantum_graph_search.*`; the shorter legacy package
+  names are retained for backward compatibility only.
 
 ## Development
 

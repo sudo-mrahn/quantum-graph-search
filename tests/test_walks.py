@@ -1,12 +1,18 @@
 import numpy as np
 import pytest
 
-from cw import step as classical_step
-from graph.make import complete
-from qs import initialize, initialize_neighborhood_state
-from qs.unitary import simulate as simulate_qs
-from qw import get_ldists, get_mean_distance_series
-from qw.lintrans import get_lt
+from quantum_graph_search.classical_walk import step as classical_step
+from quantum_graph_search.graph import complete
+from quantum_graph_search.quantum_search import (
+    initialize,
+    initialize_neighborhood_state,
+    simulate as simulate_qs,
+)
+from quantum_graph_search.quantum_walk import (
+    get_ldists,
+    get_lt,
+    get_mean_distance_series,
+)
 
 
 def test_initialize_nbhd_has_unit_norm():

@@ -2,9 +2,9 @@
 
 import numpy as np
 
-from graph.make import complete
-from qs.unitary import simulate as simulate_qs
-from qw.unitary import get_ldists
+from quantum_graph_search.graph import complete
+from quantum_graph_search.quantum_search import simulate as simulate_qs
+from quantum_graph_search.quantum_walk import get_ldists
 
 
 def main():

@@ -1,8 +1,14 @@
 import numpy as np
 import pytest
 
-from graph.attributes import check_symmetric
-from graph.make import complete, cycle, erdos, erdos_nnconn, tree
+from quantum_graph_search.graph import (
+    check_symmetric,
+    complete,
+    cycle,
+    erdos,
+    erdos_nnconn,
+    tree,
+)
 from graph.process import count_edges, fill_to_total_edges
 
 

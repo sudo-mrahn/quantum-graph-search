@@ -1,6 +1,6 @@
 """Plot a classical walk demo on a spiked cycle graph."""
 
-from cw import run_cycle_demo
+from quantum_graph_search.classical_walk import run_cycle_demo
 
 
 def main():

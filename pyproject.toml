@@ -25,7 +25,7 @@ test = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["cw*", "graph*", "qs*", "qw*"]
+include = ["cw*", "graph*", "qs*", "qw*", "quantum_graph_search*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
