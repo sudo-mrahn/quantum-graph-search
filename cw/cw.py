@@ -1,28 +1,8 @@
-"""
-module to run a classical walk on a given graph G
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-
-last edited Sep 5 2020
-Temple University
-Deparment of Mathematics
-
-dependencies:
-    numpy, networkx, matplotlib, python3.8
-    graph (custom module. ask Alex for details)
-
-usage:
-$ python cw.py graph_size starting_node total_iterations
-
-all input parameters are integers.
-"""
+"""Classical random walk utilities on dense adjacency matrices."""
 
 import sys
 import numpy as np
-import networkx as nx
-import matplotlib.pyplot as plt
-import graph.make
+from graph import cycle
 
 
 def step(adj, node):
@@ -33,7 +13,10 @@ def step(adj, node):
     adj:    adjacency matrix of graph
     node:   current node position
     """
-    return np.random.choice(np.nonzero(adj[:, node])[0], 1)[0]
+    neighbors = np.nonzero(adj[:, node])[0]
+    if len(neighbors) == 0:
+        raise ValueError("cannot take a walk step from an isolated vertex")
+    return np.random.choice(neighbors, 1)[0]
 
 
 def walk(adj, start, duration):
@@ -78,24 +61,35 @@ def return_times(adj, start, n_samples):
     return times
 
 
-# main ------------------------------------------------------------------------
-def main(args):
+def run_cycle_demo(graph_size, start, duration, num_spikes=6):
     """
-    test what I wrote up there
-
-    seems to work fine on spiked cyclic graphs! Try barabasi: also looks good.
+    run and plot a classical walk demo on a spiked cycle graph.
     """
 
-    temp_adj = graph.make.cycle(int(args[0]), 6)
-    # cyclic graph of given size with 6 spikes
+    import matplotlib.pyplot as plt
+    import networkx as nx
 
-    # temp_adj = graph.make.barabasi(int(args[0]), 3)  # parse input as int
-    path = walk(temp_adj, int(args[1]), int(args[2]))
+    temp_adj = cycle(graph_size, num_spikes)
+    path = walk(temp_adj, start, duration)
     print(path)
     temp_g = nx.Graph(temp_adj)
     nx.draw(temp_g, with_labels=True)
-    print("random walk on a graph of size " + args[0])
+    print("random walk on a graph of size " + str(graph_size))
     plt.show()
+    return path
+
+
+def main(args):
+    """
+    CLI entry point for the cycle-graph demo.
+    """
+
+    if len(args) != 3:
+        raise SystemExit(
+            "usage: python -m cw.cw graph_size starting_node total_iterations"
+        )
+
+    run_cycle_demo(int(args[0]), int(args[1]), int(args[2]))
 
 
 if __name__ == "__main__":

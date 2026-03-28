@@ -1,14 +1,4 @@
-"""
-module to construct the linear transformation representation of the quantum
-walk.
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-
-last edited Sep 4 2020
-Temple University
-Department of Mathematics
-"""
+"""Linear-transformation constructions for quantum-walk operators."""
 
 import numpy as np
 from scipy.linalg import block_diag
@@ -39,33 +29,41 @@ def get_lt(adj_mat, operator, method):
     """
 
     dim, graph_size = len(adj_mat)**2, len(adj_mat)
-    lt_block = []
-    if operator in ["coin", "c"]:
-        inv_degrees = 1 / degrees_of(adj_mat)  # coefficient for each block
-        lt_block = inv_degrees[0] * get_colblock(adj_mat, 0)  # first block
+    if operator not in ["coin", "c"]:
+        raise ValueError("operator must be 'coin' or 'c'")
+    if method not in ["np.block", "scipy.linalg", "scipy.sparse"]:
+        raise ValueError(
+            "method must be one of 'np.block', 'scipy.linalg', or 'scipy.sparse'"
+        )
 
-        # build block diagonal matrix
-        if method == "np.block":
-            for j in range(1, graph_size):
-                lt_block = np.block([
-                    [lt_block, np.zeros((len(lt_block), graph_size))],
-                    [
-                        np.zeros((graph_size, len(lt_block))),
-                        inv_degrees[j] * get_colblock(adj_mat, j),
-                    ],
-                ])
-        if method == "scipy.linalg":
-            for j in range(1, graph_size):
-                lt_block = block_diag(
-                    lt_block, inv_degrees[j] * get_colblock(adj_mat, j))
-        if method == "scipy.sparse":
-            lt_block = coo_matrix(lt_block)
-            for j in range(1, graph_size):
-                lt_block = sparse_block_diag((
-                    lt_block,
-                    coo_matrix(inv_degrees[j] * get_colblock(adj_mat, j)),
-                ))
-            lt_block = lt_block.toarray()
+    degrees = degrees_of(adj_mat)
+    if np.any(degrees == 0):
+        raise ValueError(
+            "coin linear transformation is undefined on graphs with isolated vertices"
+        )
 
-        return 2 * lt_block - np.eye(dim)
-    return print("invalid operator option")
+    inv_degrees = 1 / degrees  # coefficient for each block
+    lt_block = inv_degrees[0] * get_colblock(adj_mat, 0)  # first block
+
+    if method == "np.block":
+        for j in range(1, graph_size):
+            lt_block = np.block([
+                [lt_block, np.zeros((len(lt_block), graph_size))],
+                [
+                    np.zeros((graph_size, len(lt_block))),
+                    inv_degrees[j] * get_colblock(adj_mat, j),
+                ],
+            ])
+    elif method == "scipy.linalg":
+        for j in range(1, graph_size):
+            lt_block = block_diag(lt_block, inv_degrees[j] * get_colblock(adj_mat, j))
+    else:
+        lt_block = coo_matrix(lt_block)
+        for j in range(1, graph_size):
+            lt_block = sparse_block_diag((
+                lt_block,
+                coo_matrix(inv_degrees[j] * get_colblock(adj_mat, j)),
+            ))
+        lt_block = lt_block.toarray()
+
+    return 2 * lt_block - np.eye(dim)

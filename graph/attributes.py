@@ -1,11 +1,4 @@
-"""
-module to retrieve various attributes of a graph
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-Temple University
-Department of Mathematics
-"""
+"""Utilities for computing structural attributes of dense graph matrices."""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,10 +7,22 @@ from numpy import linalg as la
 from scipy.sparse.csgraph import shortest_path
 
 
+def _as_square_array(matrix, *, name="matrix"):
+    """
+    coerce matrix to a NumPy array and ensure it is square.
+    """
+
+    array = np.asarray(matrix)
+    if array.ndim != 2 or array.shape[0] != array.shape[1]:
+        raise ValueError(f"{name} must be a square 2-d array")
+    return array
+
+
 def check_symmetric(matrix):
     """
     just a quick function to check if a given matrix is approximately symmetric
     """
+    matrix = _as_square_array(matrix)
     return np.all(np.abs(matrix - matrix.T) < 1e-8)
 
 
@@ -25,6 +30,7 @@ def find_distances(adj_mat):
     """
     quick function to retrieve matrix of distances between vertices
     """
+    adj_mat = _as_square_array(adj_mat, name="adj_mat")
     return shortest_path(adj_mat, directed=False, unweighted=True)
 
 
@@ -34,11 +40,8 @@ def degrees_of(adj_mat):
     given adjacency matrix
     returns vector of degrees of each node
     """
-    deg = np.zeros(len(adj_mat))
-    for i in range(len(adj_mat)):
-        deg[i] = np.count_nonzero(adj_mat[:, i])
-        # outdegree = number of nonzero in column
-    return deg
+    adj_mat = _as_square_array(adj_mat, name="adj_mat")
+    return np.count_nonzero(adj_mat, axis=0).astype(float)
 
 
 def get_eigs_sym(adj_mat):
@@ -92,6 +95,7 @@ def is_connected(adj):
     """
     check if graph is connected.
     """
+    adj = _as_square_array(adj, name="adj")
     graph = nx.Graph(adj)
     return nx.is_connected(graph)
 

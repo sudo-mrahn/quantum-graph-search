@@ -1,11 +1,4 @@
-"""
-module to create simulation parameters from graphs
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-Temple University
-Department of Mathematics
-"""
+"""Graph-transformation helpers used to build simulation variants."""
 
 import copy
 import random
@@ -26,11 +19,14 @@ def fill_in(adj, n_add):
 
     returns the augmented adjacency matrix.
     """
-    # get deep copy
-    mat = copy.deepcopy(adj)
+    if n_add < 0:
+        raise ValueError("n_add must be non-negative")
 
-    # get the indices of vertices not yet connected to 0
+    mat = copy.deepcopy(adj)
     edge_pool = np.nonzero(adj[0, :] == 0)[0][1:]  # [1:] to exclude 0 itself
+    if n_add > len(edge_pool):
+        raise ValueError("cannot add more neighborhood edges than are available")
+
     chosen_ones = np.random.choice(edge_pool, n_add, replace=False)
     for i in chosen_ones:
         mat[0, i] = 1
@@ -48,11 +44,17 @@ def fill_out(adj, n_add):
     returns the augmented adjacency matrix
     """
 
+    if n_add < 0:
+        raise ValueError("n_add must be non-negative")
+
     subgraph = copy.deepcopy(adj[1:, 1:])
     temp = np.nonzero(np.triu(subgraph == 0, 1))  # unique empty edge slots
 
     # make into a list of lists
     edge_pool = [list(elem) for elem in list(zip(temp[0], temp[1]))]
+    if n_add > len(edge_pool):
+        raise ValueError("cannot add more non-marked edges than are available")
+
     random.shuffle(edge_pool)  # shuffle the order
 
     # since we shuffled, randomly choosing n_add elements is same as picking
@@ -81,40 +83,96 @@ def fill_out_upto(adj, total):
     n_more = total - n_now
 
     if n_more < 0:
-        print("\n\nERROR: number of edges are already that high\n\n")
-        return []
+        raise ValueError(
+            "the subgraph already contains more edges than the requested total"
+        )
 
     return fill_out(adj, n_more)
 
 
-def fill(tree, tot):
+def fill_inplace(tree, tot):
     """
-    given tree graph, add edges randomly so that the graph has tot edges.
+    given a graph, add edges randomly so that the graph has tot edges.
 
-    this is an in-place function; it doesn't return any values.
+    this is an in-place function; it mutates and returns the input array.
     """
 
     n_edges = count_edges(tree)
     add = tot - n_edges
     if add <= 0:
-        print("already have that many edges")
-    elif (len(tree) * (len(tree) - 1) / 2) < tot:
-        print("impossible to assign that many")
-    else:
-        zeros = np.transpose(
-            np.nonzero(tree == 0)
-        )  # includes the zeros at self loops, and duplicates upper and lower
-        options = []
-        for _, zero in enumerate(zeros):
-            if zero[0] < zero[1]:
-                options.append(zero)
-        options = np.array(options)
-        chosen = np.random.choice(
-            len(options), add,
-            replace=False)  # chosen edges, by their index in options
-        for k in range(len(chosen)):
-            tree[options[k, 0], options[k, 1]] = 1
-            tree[options[k, 1], options[k, 0]] = 1
+        raise ValueError("graph already has at least that many edges")
+    if (len(tree) * (len(tree) - 1) / 2) < tot:
+        raise ValueError("cannot assign that many edges to the graph")
+
+    zeros = np.transpose(
+        np.nonzero(tree == 0)
+    )  # includes the zeros at self loops, and duplicates upper and lower
+    options = []
+    for _, zero in enumerate(zeros):
+        if zero[0] < zero[1]:
+            options.append(zero)
+    options = np.array(options)
+    chosen = np.random.choice(
+        len(options), add,
+        replace=False)  # chosen edges, by their index in options
+    for option_index in chosen:
+        tree[options[option_index, 0], options[option_index, 1]] = 1
+        tree[options[option_index, 1], options[option_index, 0]] = 1
+
+    return tree
+
+
+def fill_to_total_edges(adj, total):
+    """
+    return a copy of adj with edges added until the graph has total edges.
+    """
+
+    new_adj = copy.deepcopy(adj)
+    return fill_inplace(new_adj, total)
+
+
+def fill(tree, tot):
+    """
+    backward-compatible alias for fill_inplace.
+    """
+
+    return fill_inplace(tree, tot)
+
+
+def pick_low_degree_nodes(adj_mat, max_degree):
+    """
+    return nodes whose degree is at most max_degree.
+    """
+
+    if not isinstance(max_degree, int):
+        raise TypeError("max_degree must be an int")
+
+    degrees = degrees_of(adj_mat)
+    return np.argwhere(degrees <= max_degree)[:, 0]
+
+
+def pick_medium_degree_nodes(adj_mat, allowed_degrees):
+    """
+    return nodes whose degree is one of the values in allowed_degrees.
+    """
+
+    if not isinstance(allowed_degrees, list):
+        raise TypeError("allowed_degrees must be a list of ints")
+
+    degrees = degrees_of(adj_mat)
+    return np.argwhere(np.isin(degrees, allowed_degrees))[:, 0]
+
+
+def pick_high_degree_nodes(adj_mat, min_degree):
+    """
+    return nodes whose degree is at least min_degree.
+    """
+
+    if not isinstance(min_degree, int):
+        raise TypeError("min_degree must be an int")
+
+    degrees = degrees_of(adj_mat)
+    return np.argwhere(degrees >= min_degree)[:, 0]
 
 
 def pick_nodes(adj_mat, setting, num):
@@ -125,46 +183,27 @@ def pick_nodes(adj_mat, setting, num):
 
     returns 1-d array
     """
-    degrees = degrees_of(adj_mat)
-    error_message = "invalid input for pick_nodes"
     if setting in ("low", "l"):
-        if isinstance(num, int):
-            nodes = np.argwhere(degrees <= num)[:, 0]
-        else:
-            print(error_message)
+        return pick_low_degree_nodes(adj_mat, num)
     elif setting in ("medium", "med", "m"):
-        if isinstance(num, list):
-            nodes = np.argwhere(np.isin(degrees, num))[:, 0]
-        else:
-            print(error_message)
+        return pick_medium_degree_nodes(adj_mat, num)
     elif setting in ("high", "h"):
-        if isinstance(num, int):
-            nodes = np.argwhere(degrees >= num)[:, 0]
-        else:
-            print(error_message)
-    else:
-        print(error_message)
-    return nodes
+        return pick_high_degree_nodes(adj_mat, num)
+
+    raise ValueError("setting must be one of 'low', 'medium', or 'high'")
 
 
-def bye_nb(adj, ref, n_bye):
+def remove_neighborhood_edges(adj, ref, n_bye):
     """
-    removes edges from the neighborhood of a given vertex.
-    returns the updated adjacency matrix.
-
-    inputs
-    adj:        adjacency matrix of graph to be shrunk
-    n_bye:       number of edges to delete
-
-
-    fixed parameters
-    ref:        reference node wrt which edges are deleted
+    remove n_bye edges from the neighborhood of the reference vertex.
     """
+
+    if n_bye < 0:
+        raise ValueError("n_bye must be non-negative")
 
     mat = copy.deepcopy(adj)
     neighbors = np.nonzero(mat[:, ref])[0]  # current neighbors
     if len(neighbors) <= n_bye:
-        # print("WARNING: cannot remove all neighbors!")
         return mat
 
     bye_list = np.random.choice(neighbors, n_bye, replace=False)  # to delete
@@ -178,65 +217,55 @@ def bye_nb(adj, ref, n_bye):
     return mat
 
 
-def bye_st(adj, n_bye):
+def remove_non_marked_edges(adj, n_bye):
     """
-    removes some edges that do not contain vertex 0 from the given graph.
-
-
-    bye_st tries to delete n_bye edges in the nbhd of each non-marked vertex
-    without deleting any edges that connect to the marked vertex.
-
-    if a node has n_bye or less neighbors, by the default behavior of bye_nb it
-    throws a warning and doesn't delete any from that node in that iteration.
-    However, those edges can still be deleted in later iterations on other
-    nodes with larger neighborhoods.
-
-    Therefore in ANY call to this function, it is possible that:
-        a node ends up with only 1 neighbor, the marked vertex
-        a node loses more neighbors than n_bye
-        a node does not lose any neighbors
-            (if it has <= n_bye neighbors, and its edges are never picked in
-            other iterations)
-
-    The total number of edges removed is <= (len(adj) - 1) * n_bye
-
-
-    returns adjacency matrix of shrunk graph.
-
-
-    adj:        adjacency matrix of graph to be shrunk
-    n_bye:       number of edges to delete
+    remove edges outside the marked neighborhood while preserving edges to 0.
     """
 
     mat = adj[1:, 1:]  # assume marked = 0
     for j in range(len(mat)):
-        mat = bye_nb(mat, j, n_bye)
+        mat = remove_neighborhood_edges(mat, j, n_bye)
     return np.block([[0, np.ones((1, len(mat)))],
                      [np.ones((len(mat), 1)), mat]])
 
 
-def bye_cp(adj, r_out, r_in):
+def remove_inside_outside_edges(adj, r_out, r_in):
     """
-    note: there is an unknown problem with this code. it does not reproduce
-    some expected results.
+    experimental helper that removes edges both inside and outside the marked
+    neighborhood.
 
-    removes r_out edges from outside the marked nbhd, and r_in edges from
-    inside the marked nbhd.
-
-    it is assumed that marked=0.
-
-    returns updated adjacency matrix.
+    This implementation is retained for research continuity, but its results
+    were historically treated with caution.
     """
+
     marked = 0
-
     mat = copy.deepcopy(adj)
-    mat = bye_nb(mat, marked, r_in)
-    temp = bye_st(mat, r_out)
+    mat = remove_neighborhood_edges(mat, marked, r_in)
+    temp = remove_non_marked_edges(mat, r_out)
     while not is_connected(temp):
-        temp = bye_st(mat, r_out)
+        temp = remove_non_marked_edges(mat, r_out)
     return temp
 
 
-# main method
-if __name__ == "__main__":
-    print("yayyy!!!")
+def bye_nb(adj, ref, n_bye):
+    """
+    backward-compatible alias for remove_neighborhood_edges.
+    """
+
+    return remove_neighborhood_edges(adj, ref, n_bye)
+
+
+def bye_st(adj, n_bye):
+    """
+    backward-compatible alias for remove_non_marked_edges.
+    """
+
+    return remove_non_marked_edges(adj, n_bye)
+
+
+def bye_cp(adj, r_out, r_in):
+    """
+    backward-compatible alias for remove_inside_outside_edges.
+    """
+
+    return remove_inside_outside_edges(adj, r_out, r_in)

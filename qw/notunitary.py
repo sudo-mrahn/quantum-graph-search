@@ -1,16 +1,15 @@
-"""
-module to run a modified, non-unitary version of the flip-flop Grover walk
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-Temple University
-Department of Mathematics
-"""
+"""Non-unitary Grover-walk variants used in research experiments."""
 
 import numpy as np
-from qs.process import initialize
+import warnings
+
+from qw._localization import (
+    resolve_localization_series,
+    run_localization_series,
+    sample_localization_series,
+)
+from qs.process import initialize_loop_state
 from qs.notunitary import coin, shift, prob
-from graph.attributes import find_distances, degrees_of
 
 
 def expected_dist(state, node, distances):
@@ -44,6 +43,38 @@ def qwalk(state, deg, adj):
     return shift(coin(state, deg, adj))
 
 
+def get_mean_distance_series(adj, marked, stop):
+    """
+    return the mean distance from marked over time.
+    """
+    return run_localization_series(
+        adj,
+        marked,
+        stop,
+        initialize_state_fn=initialize_loop_state,
+        walk_step_fn=qwalk,
+        measure_fn=lambda state, node, distances, _graph: expected_dist(
+            state, node, distances
+        ),
+    )
+
+
+def get_mean_square_distance_series(adj, marked, stop):
+    """
+    return the mean square distance from marked over time.
+    """
+    return run_localization_series(
+        adj,
+        marked,
+        stop,
+        initialize_state_fn=initialize_loop_state,
+        walk_step_fn=qwalk,
+        measure_fn=lambda state, node, distances, _graph: mean_square_dist(
+            state, node, distances
+        ),
+    )
+
+
 def get_ldists(adj, marked, l_type, stop):
     """
     simulate a quantum walk for timesteps up to 'stop' while measuring the
@@ -55,68 +86,42 @@ def get_ldists(adj, marked, l_type, stop):
     note that this function usees the non-unitary quantum operators.
     """
 
-    distances = find_distances(adj)
-    degrees = degrees_of(adj)
-    ldists = []
-    state = initialize(adj, "loop", marked)  # initial quantum state
-
-    for _ in range(stop + 1):
-        if l_type == "md":
-            ldists.append(expected_dist(state, marked, distances))
-        elif l_type == "msd":
-            ldists.append(mean_square_dist(state, marked, distances))
-        else:
-            print("\n\n ERROR: Invalid l_type argument \n\n")
-            return []
-        state = qwalk(state, degrees, adj)
-
-    return ldists
+    series_fn = resolve_localization_series(
+        l_type, get_mean_distance_series, get_mean_square_distance_series
+    )
+    return series_fn(adj, marked, stop)
 
 
-# -----------------------------------------------------------------------------
-# old code. probably needs to be deprecated
+def _sample_localization(
+    adj_mat, marked_node_indices, initial, maxss, total_steps, measure
+):
+    return sample_localization_series(
+        adj_mat,
+        marked_node_indices,
+        initial,
+        maxss,
+        total_steps,
+        walk_step_fn=qwalk,
+        measure_fn=lambda state, node, distances, _graph: measure(
+            state, node, distances
+        ),
+    )
+
+
 def sample_r(adj_mat, marked_node_indices, initial, maxss, total_steps):
     """
     run qw on given sample of nodes
     given adjacency matrix adj_mat, 1-d array of indices marked_node_indices
     returns r_t
     """
-    # initialize
-    distances = find_distances(adj_mat)
-    degrees = degrees_of(adj_mat)
-    nsamples = min(maxss, len(marked_node_indices))  # this is a 1-d array
-    mean_distance = np.zeros(
-        (total_steps + 1, nsamples))  # t+1 for initial state and t timesteps
-
-    progress = 0
-    # iterate through nodes in marked_node_indices
-    for marked in marked_node_indices[:nsamples].astype(int):
-        progress += 1
-        state = np.zeros_like(adj_mat)
-
-        # re initialize the state for each marked vertex in marked_node_indices
-        if initial in ["loop", "l"]:
-            state[marked, marked] = 1
-        if initial in ["nbhd", "n"]:
-            alpha = 1 / np.sqrt(degrees[marked])
-            state[:, marked] = alpha * adj_mat[:, marked]
-
-        # get initial mean distance
-        mean_distance[0, progress - 1] = expected_dist(state, marked,
-                                                       distances)
-
-        # run QW for node m
-        for i in range(1, total_steps + 1):
-            state = qwalk(state, degrees, adj_mat)  # run one step of the qw
-            # retrieve mean dist
-            mean_distance[i, progress - 1] = expected_dist(
-                state, marked, distances)
-
-        # progress bar
-        if progress % (int(np.round(nsamples / 10))) == 0:
-            print(str(np.round(100 * progress / nsamples, 1)) + "% complete")
-
-    return mean_distance
+    warnings.warn(
+        "sample_r() is a legacy helper; prefer get_mean_distance_series().",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _sample_localization(
+        adj_mat, marked_node_indices, initial, maxss, total_steps, expected_dist
+    )
 
 
 def sample_v(adj_mat, marked_node_indices, initial, maxss, total_steps):
@@ -125,40 +130,11 @@ def sample_v(adj_mat, marked_node_indices, initial, maxss, total_steps):
     given adjacency matrix adj_mat, 1-d array of indices marked_node_indices
     returns v_t
     """
-    # initialize
-    distances = find_distances(adj_mat)
-    degrees = degrees_of(adj_mat)
-    nsamples = min(maxss, len(marked_node_indices))  # this is a 1-d array
-    mean_distance = np.zeros(
-        (total_steps + 1, nsamples))  # t+1 for initial state and t timesteps
-
-    progress = 0
-    # iterate through nodes in marked_node_indices
-    for marked in marked_node_indices[:nsamples].astype(int):
-        progress += 1
-        state = np.zeros_like(adj_mat)
-
-        # re initialize the state for each marked vertex in marked_node_indices
-        if initial in ["loop", "l"]:
-            state[marked, marked] = 1
-        if initial in ["nbhd", "n"]:
-            alpha = 1 / np.sqrt(degrees[marked])
-            state[:, marked] = alpha * adj_mat[:, marked]
-
-        # get initial mean distance
-        mean_distance[0,
-                      progress - 1] = mean_square_dist(state, marked,
-                                                       distances)
-
-        # run QW for node m
-        for i in range(1, total_steps + 1):
-            state = qwalk(state, degrees, adj_mat)  # run one step of the qw
-            # retrieve mean dist
-            mean_distance[i, progress - 1] = mean_square_dist(
-                state, marked, distances)
-
-        # progress bar
-        if progress % (int(np.round(nsamples / 10))) == 0:
-            print(str(np.round(100 * progress / nsamples, 1)) + "% complete")
-
-    return mean_distance
+    warnings.warn(
+        "sample_v() is a legacy helper; prefer get_mean_square_distance_series().",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _sample_localization(
+        adj_mat, marked_node_indices, initial, maxss, total_steps, mean_square_dist
+    )

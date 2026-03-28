@@ -1,16 +1,45 @@
-"""
-module to generate adjacency matrices of graphs.
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-Temple University
-Department of Mathematics
-"""
+"""Graph-construction utilities that return dense adjacency matrices."""
 
 import numpy as np
-import numpy.random as rd
 from scipy.linalg import block_diag
+
 from graph.attributes import is_connected
+
+
+def _require_int(name, value, minimum=None):
+    """
+    validate integer-valued constructor arguments.
+    """
+
+    if not isinstance(value, (int, np.integer)):
+        raise TypeError(f"{name} must be an integer")
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{name} must be at least {minimum}")
+    return int(value)
+
+
+def _require_probability(name, value):
+    """
+    validate edge probabilities.
+    """
+
+    if not isinstance(value, (int, float, np.integer, np.floating)):
+        raise TypeError(f"{name} must be a real number")
+    if not 0 <= value <= 1:
+        raise ValueError(f"{name} must be between 0 and 1")
+    return float(value)
+
+
+def _sample_symmetric_block(size, probability):
+    """
+    sample an undirected Erdos-Renyi block of the requested size.
+    """
+
+    block = np.zeros((size, size))
+    triu_ind = np.triu_indices(size, k=1)
+    block[triu_ind] = np.random.binomial(1, probability, len(triu_ind[0]))
+    block[(triu_ind[1], triu_ind[0])] = block[triu_ind]
+    return block
 
 
 def complete(g_size):
@@ -22,6 +51,8 @@ def complete(g_size):
         adj = np.ones((g_size, g_size)) - np.eye(g_size)
     for graphs of sizes < 1e4
     """
+
+    g_size = _require_int("g_size", g_size, minimum=1)
     adj = np.ones((g_size, g_size))
     np.fill_diagonal(adj, 0)
     return adj
@@ -31,6 +62,11 @@ def tree(g_size):
     """
     randomly generate a graph (tree) with g_size nodes and g_size-1 edges
     """
+
+    g_size = _require_int("g_size", g_size, minimum=1)
+    if g_size == 1:
+        return np.zeros((1, 1))
+
     adj = np.array([[0, 1], [1, 0]])
 
     for _ in range(2, g_size):
@@ -48,15 +84,23 @@ def cycle(graph_size, num_spikes):
     returns the adjacency matrix.
     """
 
+    graph_size = _require_int("graph_size", graph_size, minimum=3)
+    num_spikes = _require_int("num_spikes", num_spikes, minimum=0)
+    cycle_size = graph_size - num_spikes
+    if cycle_size < 3:
+        raise ValueError("graph_size - num_spikes must be at least 3")
+
     # make the cycle graph
-    adj = np.roll(np.eye(graph_size - num_spikes), -1) + np.roll(
-        np.eye(graph_size - num_spikes), 1)
+    adj = np.roll(np.eye(cycle_size), -1) + np.roll(np.eye(cycle_size), 1)
     np.fill_diagonal(adj, 0)
     adj[-1, 0], adj[0, -1] = 1, 1
 
     # add spikes
     adj = block_diag(adj, np.zeros((num_spikes, num_spikes)))
-    spike_at = np.random.randint(0, graph_size - num_spikes, num_spikes)
+    if num_spikes == 0:
+        return adj
+
+    spike_at = np.random.randint(0, cycle_size, num_spikes)
     for k in range(num_spikes):
         adj[-k - 1, spike_at[k]], adj[spike_at[k], -k - 1] = 1, 1
 
@@ -69,19 +113,17 @@ def barabasi(graph_size, m_0):
     generates graph G of size n from a complete graph of size m_0
     returns adjacency matrix
     """
-    graph = np.ones((m_0, m_0)) - np.eye(m_0)
+
+    graph_size = _require_int("graph_size", graph_size, minimum=2)
+    m_0 = _require_int("m_0", m_0, minimum=2)
+    if m_0 > graph_size:
+        raise ValueError("m_0 cannot exceed graph_size")
+
+    graph = complete(m_0)
     for _ in range(m_0, graph_size):
         current_size = len(graph[0, :])
-        edge_prob = np.zeros(current_size)
-        for j in range(current_size):
-            edge_prob[j] = np.count_nonzero(
-                graph[:, j])  # outdegree = number of nonzero in column
-            # IMPORTANT: for a vector that goes from node u to node v, u is the
-            # column and v is the row.
-
-        edge_prob = edge_prob / np.sum(
-            edge_prob
-        )  # vector containing the p_i, prob of new node to connect to node i
+        edge_prob = np.count_nonzero(graph, axis=0).astype(float)
+        edge_prob = edge_prob / np.sum(edge_prob)
 
         # make the adjacency matrix one node bigger
         graph = np.append(graph, np.zeros((current_size, 1)), axis=1)
@@ -89,14 +131,8 @@ def barabasi(graph_size, m_0):
 
         # roll to get new edges (roll until success)
         while np.count_nonzero(graph[:, current_size]) == 0:
-            for k in range(current_size):
-                roll = rd.binomial(
-                    1,
-                    edge_prob[k])  # 1 is the sample size n of the population
-                # i.e. this is just a Bernoulli trial with success probability
-                # edge_prob[k]
-                # returns the number of successes out of sample size n=1,
-                # performed 1 time (default param)
+            for k, probability in enumerate(edge_prob):
+                roll = np.random.binomial(1, probability)
                 if roll != 0:  # make sure to add both directions
                     graph[k, current_size] = roll
                     graph[current_size, k] = roll
@@ -106,17 +142,19 @@ def barabasi(graph_size, m_0):
 
 def erdos(g_size, subtype):
     """
-    convenience function to defin the properties of the erdos-renyi graph to be
-    used in deg_distr
+    convenience function to define the properties of the erdos-renyi graph to
+    be used in deg_distr
     """
 
+    g_size = _require_int("g_size", g_size, minimum=1)
+
     if subtype == "o":
-        adj = erdos_orig(g_size)
-    elif subtype == "a":
-        adj = erdos_a(g_size)
-    elif subtype == "d":
-        adj = erdos_d(g_size)
-    return adj
+        return erdos_orig(g_size)
+    if subtype == "a":
+        return erdos_a(g_size)
+    if subtype == "d":
+        return erdos_d(g_size)
+    raise ValueError("subtype must be one of 'o', 'a', or 'd'")
 
 
 def erdos_orig(g_size):
@@ -137,6 +175,7 @@ def erdos_a(g_size):
 
     returns the adjacency matrix.
     """
+
     p_in, p_out, n_comm = 0.1, 0.0001, 6
     adj, _ = erdos_planted(g_size, n_comm, p_in, p_out)
     return adj
@@ -148,6 +187,7 @@ def erdos_d(g_size):
 
     returns the adjacency matrix.
     """
+
     p_in, p_out, n_comm = 0.0001, 0.1, 6
     adj, _ = erdos_planted(g_size, n_comm, p_in, p_out)
     return adj
@@ -155,18 +195,18 @@ def erdos_d(g_size):
 
 def erdos_planted(g_size, n_comm, p_in, p_out=None):
     """
-    same as erdos_nnconn defined below, except that it either returns a
-    connected graph or an assertion error.
+    same as erdos_nnconn defined below, except that it retries until a
+    connected graph is found or the retry budget is exhausted.
     """
+
     params = (g_size, n_comm, p_in, p_out)
 
-    adj, communities = erdos_nnconn(*params)
-    count = 0
-    while not is_connected(adj):
+    for _ in range(100):
         adj, communities = erdos_nnconn(*params)
-        count += 1
-        assert count < 100  # don't try for a connected graph >100 times
-    return adj, communities
+        if is_connected(adj):
+            return adj, communities
+
+    raise RuntimeError("failed to generate a connected stochastic block graph")
 
 
 def erdos_nnconn(g_size, n_comm, p_in, p_out=None):
@@ -193,38 +233,32 @@ def erdos_nnconn(g_size, n_comm, p_in, p_out=None):
     returns adjacency matrix
     """
 
+    g_size = _require_int("g_size", g_size, minimum=1)
+    n_comm = _require_int("n_comm", n_comm, minimum=1)
+    if n_comm > g_size:
+        raise ValueError("n_comm cannot exceed g_size")
+
+    p_in = _require_probability("p_in", p_in)
     if p_out is None:
         p_out = p_in
+    else:
+        p_out = _require_probability("p_out", p_out)
 
     # partition the graph into communities
     communities = np.array_split(np.arange(g_size), n_comm)
 
     # list of community sizes
-    c_sizes = [len(communities[i]) for i in range(n_comm)]
+    c_sizes = [len(community) for community in communities]
 
-    adj = np.zeros((c_sizes[0], c_sizes[0]))
-    triu_ind = np.triu_indices(c_sizes[0], k=1)
-    adj[triu_ind] = list(
-        np.random.binomial(1, p_in, int((c_sizes[0] * (c_sizes[0] - 1)) / 2)))
+    adj = _sample_symmetric_block(c_sizes[0], p_in)
     so_far = c_sizes[0]
 
     for j in range(1, n_comm):
-        pawnee = np.zeros((c_sizes[j], c_sizes[j]))
-        triu_ind = np.triu_indices(c_sizes[j], k=1)
-        pawnee[triu_ind] = list(
-            np.random.binomial(1, p_in, int(
-                (c_sizes[j] * (c_sizes[j] - 1)) / 2)))
-
-        eagleton = np.random.binomial(1, p_out,
-                                      int(so_far * c_sizes[j])).reshape(
-                                          so_far, c_sizes[j])
-
-        adj = np.block([[adj, eagleton],
-                        [np.zeros((c_sizes[j], so_far)), pawnee]])
-
+        pawnee = _sample_symmetric_block(c_sizes[j], p_in)
+        eagleton = np.random.binomial(1, p_out, so_far * c_sizes[j]).reshape(
+            so_far, c_sizes[j]
+        )
+        adj = np.block([[adj, eagleton], [eagleton.T, pawnee]])
         so_far += c_sizes[j]
-
-    tril = np.tril_indices(g_size, k=-1)
-    adj[tril] = adj.T[tril]
 
     return adj, communities

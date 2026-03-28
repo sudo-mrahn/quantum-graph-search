@@ -1,17 +1,9 @@
-"""
-module to run a flip-flop Grover search on a given graph G
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-
-last edited Sep 5 2020
-Temple University
-Department of Mathematics
-"""
+"""Unitary flip-flop Grover search on dense graph adjacency matrices."""
 
 import numpy as np
-from graph.attributes import degrees_of
-from qs.process import initialize
+import warnings
+
+from qs._simulation import run_probability_series, sample_probability_series
 
 
 # corrected operators
@@ -20,8 +12,11 @@ def oracle(state, marked_node, adj):
     """
     unitary oracle operator
     """
-    state[:, marked_node] -= 2 * adj[:, marked_node] * state[:, marked_node]
-    return state
+    new_state = np.array(state, dtype=float, copy=True)
+    new_state[:, marked_node] -= (
+        2 * adj[:, marked_node] * new_state[:, marked_node]
+    )
+    return new_state
 
 
 def coin(state, deg, adj):
@@ -35,12 +30,15 @@ def coin(state, deg, adj):
     rather, it is the proper Hilbert space of directed edges represented in adj
     """
 
+    new_state = np.array(state, dtype=float, copy=True)
     for i in range(len(adj)):
         # sum coefficients of vectors
         ampl_sum = np.dot(adj[:, i], state[:, i])
-        state[:, i] -= (2 * ampl_sum / deg[i]) * adj[:, i]
+        if deg[i] == 0:
+            raise ValueError("coin operator is undefined on isolated vertices")
+        new_state[:, i] -= (2 * ampl_sum / deg[i]) * adj[:, i]
 
-    return -1 * state
+    return -1 * new_state
 
 
 def shift(state, adj):
@@ -77,14 +75,17 @@ def simulate(adj, marked, t_1, stop):
     stop: total number of qs iterations
     """
 
-    deg = degrees_of(adj)
-    pr_marked = []
-    state = initialize(adj)  # uniform distribution initial state
-
-    for _ in range(stop + 1):
-        pr_marked.append(prob(state, marked, adj))
-        state = qsearch(state, deg, adj, marked, t_1)
-    return pr_marked
+    return run_probability_series(
+        adj,
+        marked,
+        stop,
+        step_fn=lambda state, degrees, graph, marked_node: qsearch(
+            state, degrees, graph, marked_node, t_1
+        ),
+        probability_fn=lambda state, marked_node, graph: prob(
+            state, marked_node, graph
+        ),
+    )
 
 
 def prob(state, marked, adj):
@@ -94,46 +95,32 @@ def prob(state, marked, adj):
     return np.sum((state[:, marked] * adj[:, marked])**2)
 
 
-# -----------------------------------------------------------------------------
-# this is some old code
-# should use a list object instead of a np array for prob_at_marked
+def _sample_probabilities(adj_mat, node_indices, maxss, total_steps, t_1):
+    """
+    legacy helper that samples probabilities for multiple marked nodes.
+    """
+    return sample_probability_series(
+        adj_mat,
+        node_indices,
+        maxss,
+        total_steps,
+        step_fn=lambda state, degrees, graph, marked_node: qsearch(
+            state, degrees, graph, marked_node, t_1
+        ),
+        probability_fn=lambda state, marked_node, graph: prob(
+            state, marked_node, graph
+        ),
+    )
+
+
 def sample(adj_mat, node_indices, maxss, total_steps, t_1):
     """
-    **unitary version**
-
-    run qs on given sample of nodes
-    given adjacency matrix adj_mat, 1-d array of indices node_indices
-    returns prob_at_marked
+    deprecated compatibility wrapper for the legacy sampling helper.
     """
 
-    # initialize
-    alpha = 1 / np.sqrt(
-        np.count_nonzero(adj_mat))  # uniform initial distribution
-    degrees = degrees_of(adj_mat)
-
-    nsamples = min(maxss, len(node_indices))
-    # this is a 1-d array
-    prob_at_marked = np.zeros(
-        (total_steps + 1, nsamples))  # t+1 for initial state + t timesteps
-
-    progress = 0
-    # iterate through nodes in node_indices
-    for marked_node in node_indices[:nsamples].astype(int):
-        progress += 1
-
-        # uniform initial distribution
-        state = alpha * adj_mat  # re-initialize state for each node (duh)
-        prob_at_marked[0, progress - 1] = prob(state, marked_node, adj_mat)
-
-        # run QS for node m
-        for i in range(1, total_steps + 1):
-            state = qsearch(state, degrees, adj_mat, marked_node,
-                            t_1)  # run one step of the qs
-            # retrieve probabilities
-            prob_at_marked[i, progress - 1] = prob(state, marked_node, adj_mat)
-
-        # progress bar
-        if progress % (int(np.round(nsamples / 10))) == 0:
-            print(str(np.round(100 * progress / nsamples, 1)) + "% complete")
-
-    return prob_at_marked
+    warnings.warn(
+        "sample() is a legacy helper; prefer simulate() for the public API.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _sample_probabilities(adj_mat, node_indices, maxss, total_steps, t_1)

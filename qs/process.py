@@ -1,12 +1,4 @@
-"""
-module to support the quantum search modules.
-this contains some useful functions.
-
-created by Alex Ahn
-alex.song.ahn@gmail.com
-Temple University
-Department of Mathematics
-"""
+"""Supporting helpers for the quantum-search modules."""
 
 import numpy as np
 from graph.attributes import degrees_of
@@ -16,8 +8,50 @@ def quarterly(count, total):
     """
     display quarterly progress, measured by proportion of count / total.
     """
-    if count in np.arange(int(total / 4), total + 1, int(total / 4)):
+    if total <= 0:
+        raise ValueError("total must be positive")
+
+    interval = max(1, int(total / 4))
+    if count in np.arange(interval, total + 1, interval):
         print("%.f%% complete" % (100 * count / total))
+
+
+def initialize_loop_state(adj, marked):
+    """
+    initialize a state concentrated on a self-loop at the marked vertex.
+    """
+
+    state = np.zeros_like(adj, dtype=float)
+    state[marked, marked] = 1
+    return state
+
+
+def initialize_neighborhood_state(adj, marked):
+    """
+    initialize a state uniformly over the marked vertex neighborhood.
+    """
+
+    degrees = degrees_of(adj)
+    if degrees[marked] == 0:
+        raise ValueError("marked vertex must have positive degree")
+
+    state = np.zeros_like(adj, dtype=float)
+    alpha = 1 / np.sqrt(degrees[marked])
+    state[:, marked] = alpha * adj[:, marked]
+    return state
+
+
+def initialize_uniform_state(adj):
+    """
+    initialize a state uniformly over all directed edges.
+    """
+
+    n_edges = np.count_nonzero(adj)
+    if n_edges == 0:
+        raise ValueError("adjacency matrix must contain at least one edge")
+
+    alpha = 1 / np.sqrt(n_edges)
+    return alpha * adj.astype(float)
 
 
 def initialize(adj, mode=None, marked=None):
@@ -38,30 +72,21 @@ def initialize(adj, mode=None, marked=None):
     on all edges, i.e. same as mode='u'
     """
 
-    degrees = degrees_of(adj)
-    state = np.zeros_like(adj.astype(float))
-    if mode is not None:
-        if marked is not None:
-            if mode in ["loop", "l"]:
-                state[marked, marked] = 1
-                # this is only in the augmented Hilbert space
-            if mode in ["nbhd", "n"]:
-                alpha = 1 / np.sqrt(degrees[marked])
-                state[:, marked] = alpha * adj[:, marked]
-                # this is in the Hilbert space
-                # it is not symmetric
-        if mode in ["uniform", "u", "unif"]:
-            alpha = 1 / np.sqrt(np.count_nonzero(adj))
-            state = alpha * adj
+    if mode is None:
+        return initialize_uniform_state(adj)
 
-    # this should cover the case where only adj is provided
-    else:
-        alpha = 1 / np.sqrt(np.count_nonzero(adj))
-        state = alpha * adj
+    if mode in ["uniform", "u", "unif"]:
+        return initialize_uniform_state(adj)
 
-    if np.max(state) == np.min(state):
-        print("something may have gone wrong. double check results.")
-    return state
+    if marked is None:
+        raise ValueError("marked must be provided for loop or neighborhood modes")
+
+    if mode in ["loop", "l"]:
+        return initialize_loop_state(adj, marked)
+    if mode in ["nbhd", "n"]:
+        return initialize_neighborhood_state(adj, marked)
+
+    raise ValueError("mode must be one of loop, nbhd, or uniform")
 
 
 def modulus(state):
@@ -82,7 +107,7 @@ def search_times(prob, prop):
     """
 
     time_to_success = None
-    if type(prob) is type(np.array([])):  # ignore E721. we do want type
+    if isinstance(prob, np.ndarray):
         ncols = len(prob[0, :])
         max_prob = np.zeros(ncols)
         time_to_success = np.zeros(ncols)
@@ -96,12 +121,14 @@ def search_times(prob, prop):
                 if prob[i, j] >= prop * max_prob[j]:
                     break
                 time_to_success[j] += 1
-    if type(prob) is type([]):  # ignore E721
+    elif isinstance(prob, list):
         max_prob = max(prob)
         time_to_success = 0
         for _, elem in enumerate(prob):
             if elem >= prop * max_prob:
                 break
             time_to_success += 1
+    else:
+        raise TypeError("prob must be a list or a NumPy array")
 
     return time_to_success
