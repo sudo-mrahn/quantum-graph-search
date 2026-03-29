@@ -45,16 +45,16 @@ mean_distance = get_mean_distance_series(adj, marked=0, stop=10)
 ## 3. Graph Variants for Experiments
 
 The functions in `graph.process` support perturbing or modifying graphs for
-research experiments. They are useful, but are better viewed as experiment
-helpers than as a polished stable API and are intentionally left outside the
-new canonical namespace.
+research experiments. They remain available through the legacy compatibility
+package, but they are better viewed as experiment helpers than as a polished
+stable API and are intentionally left outside the canonical public namespace.
 
 ## 4. Non-unitary Variants
 
 The `qs.notunitary` and `qw.notunitary` modules are retained because they were
 part of the original research workflow. Public readers should start with
 `quantum_graph_search.quantum_search` and
-`quantum_graph_search.quantum_walk` first and only use the non-unitary
+`quantum_graph_search.quantum_walk` first and only use the legacy non-unitary
 variants when they need that specific comparison.
 
 The selector-style `get_ldists()` helper is still available for compatibility,

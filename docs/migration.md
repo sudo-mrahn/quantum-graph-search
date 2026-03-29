@@ -25,6 +25,11 @@ The legacy top-level packages `graph`, `qs`, `qw`, and `cw` are still present
 so older notebooks and scripts keep working. New public examples, tests, and
 documentation now prefer the namespaced package.
 
+Research-oriented helpers such as `graph.process`, `qs.notunitary`,
+`qs.process`, `qw.notunitary`, and `qw.lintrans` remain importable through the
+legacy compatibility packages, but they are not re-exported from the canonical
+public modules.
+
 For new quantum-walk code, prefer the explicit
 `get_mean_distance_series()` / `get_mean_square_distance_series()` APIs over
 the older selector-style `get_ldists()` wrapper.

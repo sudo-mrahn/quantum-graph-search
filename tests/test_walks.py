@@ -12,6 +12,7 @@ from quantum_graph_search.quantum_walk import (
     get_ldists,
     get_lt,
     get_mean_distance_series,
+    get_mean_square_distance_series,
 )
 
 
@@ -72,3 +73,51 @@ def test_classical_step_rejects_isolated_vertices():
 
     with pytest.raises(ValueError):
         classical_step(adj, node=0)
+
+
+def test_quantum_search_has_stable_reference_values_on_two_node_graph():
+    adj = complete(2)
+
+    assert np.allclose(
+        simulate_qs(adj, marked=0, t_1=1, stop=3),
+        [0.5, 0.5, 0.5, 0.5],
+    )
+
+
+def test_quantum_walk_mean_distance_has_stable_reference_values_on_two_node_graph():
+    adj = complete(2)
+
+    assert np.allclose(
+        get_mean_distance_series(adj, marked=0, stop=3),
+        [0.0, 1.0, 0.0, 1.0],
+    )
+
+
+def test_quantum_walk_mean_square_distance_has_stable_reference_values_on_two_node_graph():
+    adj = complete(2)
+
+    assert np.allclose(
+        get_mean_square_distance_series(adj, marked=0, stop=3),
+        [0.0, 1.0, 0.0, 1.0],
+    )
+
+
+def test_quantum_search_rejects_out_of_range_marked_vertex():
+    adj = complete(4)
+
+    with pytest.raises(ValueError):
+        simulate_qs(adj, marked=4, t_1=1, stop=1)
+
+
+def test_quantum_walk_rejects_out_of_range_marked_vertex():
+    adj = complete(4)
+
+    with pytest.raises(ValueError):
+        get_mean_distance_series(adj, marked=4, stop=1)
+
+
+def test_initialize_neighborhood_rejects_out_of_range_marked_vertex():
+    adj = complete(4)
+
+    with pytest.raises(ValueError):
+        initialize_neighborhood_state(adj, marked=4)

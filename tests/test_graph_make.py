@@ -9,7 +9,6 @@ from quantum_graph_search.graph import (
     erdos_nnconn,
     tree,
 )
-from graph.process import count_edges, fill_to_total_edges
 
 
 def test_complete_returns_symmetric_adjacency_matrix():
@@ -46,17 +45,6 @@ def test_erdos_nnconn_returns_partitioned_graph():
     assert check_symmetric(adj)
 
 
-def test_fill_to_total_edges_returns_new_graph_with_requested_edge_count():
-    np.random.seed(0)
-    adj = tree(5)
-
-    filled = fill_to_total_edges(adj, total=6)
-
-    assert count_edges(adj) == 4
-    assert count_edges(filled) == 6
-    assert check_symmetric(filled)
-
-
 def test_cycle_rejects_too_many_spikes():
     with pytest.raises(ValueError):
         cycle(4, 2)
@@ -65,3 +53,8 @@ def test_cycle_rejects_too_many_spikes():
 def test_erdos_rejects_invalid_subtype():
     with pytest.raises(ValueError):
         erdos(10, "z")
+
+
+def test_complete_rejects_non_integer_size():
+    with pytest.raises(TypeError):
+        complete(3.5)

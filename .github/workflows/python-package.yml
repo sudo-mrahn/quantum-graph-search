@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     env:
       MPLBACKEND: Agg
       PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
@@ -36,9 +36,12 @@ jobs:
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        python -m flake8 . --exclude=.venv,build,dist --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        python -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        python -m flake8 . --exclude=.venv,build,dist --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
         python -m pytest tests
+    - name: Run basic example
+      run: |
+        python examples/basic_usage.py

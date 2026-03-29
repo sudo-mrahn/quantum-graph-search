@@ -15,10 +15,10 @@ The canonical public code surface is now namespaced under
 `quantum_graph_search`:
 
 - `quantum_graph_search.graph` for graph construction and graph attributes
-- `quantum_graph_search.quantum_search` for unitary and non-unitary quantum
-  search routines
-- `quantum_graph_search.quantum_walk` for unitary and non-unitary quantum
-  walk/localization routines
+- `quantum_graph_search.quantum_search` for the canonical unitary quantum
+  search workflow and state-initialization helpers
+- `quantum_graph_search.quantum_walk` for the canonical unitary quantum
+  walk/localization workflow and `get_lt()`
 - `quantum_graph_search.classical_walk` for simple classical walk utilities
 
 Historical implementations that are kept for reference live under
@@ -28,8 +28,9 @@ Exploratory notebook material lives under `notebooks/` and is not part of the
 supported API.
 
 The older top-level Python packages `graph`, `qs`, `qw`, and `cw` are still
-shipped as compatibility layers during the namespace transition, but new code
-should prefer `quantum_graph_search.*`.
+shipped as compatibility layers. The canonical implementations now live under
+`quantum_graph_search`, but the legacy imports remain available for older
+scripts and notebooks.
 
 ## Core Concepts
 
@@ -38,8 +39,8 @@ should prefer `quantum_graph_search.*`.
   dense matrices whose entries store amplitudes on directed edges.
 - Several graph-processing helpers assume that vertex `0` is the marked vertex
   unless a function explicitly accepts a different marked-node argument.
-- `unitary` and `notunitary` modules are both retained because both were part
-  of the original research workflow.
+- Research-oriented non-unitary variants are still available through the
+  legacy `qs` and `qw` packages.
 
 ## Installation
 
@@ -62,6 +63,18 @@ Alternatively:
 ```bash
 pip install -r requirements.txt
 ```
+
+For the standard local development workflow:
+
+```bash
+make bootstrap
+source .venv/bin/activate
+```
+
+If `make bootstrap` cannot create `.venv` with `python3 -m venv` on
+Debian/Ubuntu, install the matching `python3-venv` package for your
+interpreter and rerun the command. The target also falls back to
+`python3 -m virtualenv` when that tool is already available.
 
 ## Quick Start
 
@@ -95,7 +108,7 @@ older selector-style `get_ldists()` wrapper.
 ## Repository Layout
 
 - [`quantum_graph_search/`](quantum_graph_search)
-  Canonical namespaced public API for the package.
+  Canonical namespaced public API and implementation home for the package.
 - [`graph/`](graph)
   Legacy compatibility package for graph generation and graph-processing
   helpers.
@@ -120,22 +133,29 @@ older selector-style `get_ldists()` wrapper.
 - Most routines operate on dense NumPy adjacency matrices.
 - Several graph-transformation routines assume that vertex `0` is the marked
   vertex unless otherwise stated.
-- `unitary` and `notunitary` modules are both included because both were part
-  of the research workflow.
 - `archive/legacy/` is historical code. It is not treated as the canonical
   implementation surface.
 - Some utilities are research-grade and intentionally compact. The repository
   favors readability and reproducibility over a fully productized API.
 - New code should prefer `quantum_graph_search.*`; the shorter legacy package
   names are retained for backward compatibility only.
+- Research-only helpers such as `graph.process`, `qs.notunitary`, and
+  `qw.notunitary` remain importable through the legacy compatibility modules,
+  but they are not part of the supported canonical surface.
 
 ## Development
 
-Run tests from the repository root:
+The canonical local validation path is:
 
 ```bash
-python3 -m pytest
+make bootstrap
+make test
+make lint
 ```
+
+`make bootstrap` installs the package in editable mode with test dependencies
+into `.venv`. The lint command mirrors CI's `flake8` checks. See
+[`docs/development.md`](docs/development.md) for the full local workflow.
 
 ## Tested Environment
 

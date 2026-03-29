@@ -47,7 +47,8 @@ Primary public entry points:
 - `quantum_graph_search.quantum_search.prob`
 - `quantum_graph_search.quantum_search.simulate`
 
-These are the canonical entry points for the unitary quantum-search workflow.
+These are the canonical entry points for the supported unitary quantum-search
+workflow.
 
 ### quantum_graph_search.quantum_walk
 
@@ -60,10 +61,10 @@ Primary public entry points:
 - `quantum_graph_search.quantum_walk.get_mean_square_distance_series`
 - `quantum_graph_search.quantum_walk.get_lt`
 
-These are the canonical entry points for the unitary quantum-walk workflow.
-The older selector-style `quantum_graph_search.quantum_walk.get_ldists` helper
-is retained for compatibility, but new code is clearer when it calls one of
-the explicit series functions above.
+These are the canonical entry points for the supported unitary quantum-walk
+workflow. The older selector-style `quantum_graph_search.quantum_walk.get_ldists`
+helper is retained for compatibility, but new code is clearer when it calls
+one of the explicit series functions above.
 
 ### quantum_graph_search.classical_walk
 
@@ -88,8 +89,13 @@ recommended public import surface.
 
 - `graph.process`
   Useful for experiment setup, but not a polished stable API.
+- `qs.process`
+  Historical helper module used by the legacy compatibility layer.
 - `qs.notunitary`
   Kept because it was part of the research workflow.
+- `qw.lintrans`
+  The legacy module path remains importable, but canonical code should call
+  `quantum_graph_search.quantum_walk.get_lt()` directly.
 - `qw.notunitary`
   Kept because it was part of the research workflow.
 - Older sampling helpers in `qs.unitary` and `qw.unitary`

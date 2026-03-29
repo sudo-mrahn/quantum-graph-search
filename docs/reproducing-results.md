@@ -23,6 +23,7 @@ reproduction package.
 2. `docs/api-map.md`
 3. `docs/workflows.md`
 4. `examples/basic_usage.py`
-5. `graph/`, `qs/`, and `qw/`
+5. `quantum_graph_search/`
 
-If you need historical context, then consult `archive/legacy/`.
+If you need historical context or research-only helpers, then consult the
+legacy compatibility packages and `archive/legacy/`.
