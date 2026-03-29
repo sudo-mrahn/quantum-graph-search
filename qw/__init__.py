@@ -1,6 +1,6 @@
-"""Quantum walk routines and supporting utilities."""
+"""Compatibility wrappers for quantum-walk routines and supporting utilities."""
 
-from .unitary import (
+from quantum_graph_search.quantum_walk import (
     expected_dist,
     get_ldists,
     get_mean_distance_series,

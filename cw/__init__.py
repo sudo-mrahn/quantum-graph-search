@@ -1,6 +1,6 @@
-"""Classical walk utilities on dense adjacency matrices."""
+"""Compatibility wrappers for classical walk utilities."""
 
-from .cw import return_times, run_cycle_demo, step, walk
+from quantum_graph_search.classical_walk import return_times, run_cycle_demo, step, walk
 
 __all__ = [
     "return_times",

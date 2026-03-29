@@ -1,11 +1,11 @@
 """Canonical quantum-walk import surface for ``quantum_graph_search``.
 
-The current implementations still live in the legacy ``qw`` package while the
-namespace transition remains in progress. New code should prefer the explicit
-series helpers over the older selector-style ``get_ldists()`` wrapper.
+Research-oriented non-unitary and helper modules remain available through the
+legacy ``qw`` compatibility package.
 """
 
-from qw import (
+from quantum_graph_search._quantum_walk_lintrans import get_lt
+from quantum_graph_search._quantum_walk_unitary import (
     expected_dist,
     get_mean_distance_series,
     get_mean_square_distance_series,
@@ -13,18 +13,12 @@ from qw import (
     mean_square_dist,
     qwalk,
 )
-from qw import lintrans, notunitary, unitary
-from qw.lintrans import get_lt
-
 __all__ = [
     "expected_dist",
     "get_mean_distance_series",
     "get_mean_square_distance_series",
     "get_ldists",
     "get_lt",
-    "lintrans",
     "mean_square_dist",
-    "notunitary",
     "qwalk",
-    "unitary",
 ]

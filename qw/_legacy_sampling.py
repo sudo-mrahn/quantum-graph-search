@@ -1,28 +1,7 @@
-"""Internal compatibility helpers for legacy quantum-walk sampling APIs."""
+"""Compatibility wrappers for historical localization sampling helpers."""
 
-from qw._localization import sample_localization_series
+from quantum_graph_search._quantum_walk_localization import (
+    sample_localization_measure_series,
+)
 
-
-def sample_localization_measure_series(
-    adj_mat,
-    marked_node_indices,
-    initial,
-    maxss,
-    total_steps,
-    *,
-    walk_step_fn,
-    measure_fn,
-):
-    """
-    Run the historical multi-marked-node localization workflow.
-    """
-
-    return sample_localization_series(
-        adj_mat,
-        marked_node_indices,
-        initial,
-        maxss,
-        total_steps,
-        walk_step_fn=walk_step_fn,
-        measure_fn=measure_fn,
-    )
+__all__ = ["sample_localization_measure_series"]

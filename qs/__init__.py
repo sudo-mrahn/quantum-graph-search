@@ -1,14 +1,19 @@
-"""Quantum search routines and supporting utilities."""
+"""Compatibility wrappers for quantum search routines and supporting utilities."""
 
-from .process import (
+from quantum_graph_search.quantum_search import (
     initialize,
     initialize_loop_state,
     initialize_neighborhood_state,
     initialize_uniform_state,
     modulus,
     search_times,
+    coin,
+    oracle,
+    prob,
+    qsearch,
+    shift,
+    simulate,
 )
-from .unitary import coin, oracle, prob, qsearch, shift, simulate
 
 __all__ = [
     "coin",

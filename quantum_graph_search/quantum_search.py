@@ -1,25 +1,25 @@
 """Canonical quantum-search import surface for ``quantum_graph_search``.
 
-The current implementations still live in the legacy ``qs`` package while the
-namespace transition remains in progress.
+Research-oriented non-unitary and helper modules remain available through the
+legacy ``qs`` compatibility package.
 """
 
-from qs import (
-    coin,
+from quantum_graph_search._quantum_search_process import (
     initialize,
     initialize_loop_state,
     initialize_neighborhood_state,
     initialize_uniform_state,
     modulus,
+    search_times,
+)
+from quantum_graph_search._quantum_search_unitary import (
+    coin,
     oracle,
     prob,
     qsearch,
-    search_times,
     shift,
     simulate,
 )
-from qs import notunitary, process, unitary
-
 __all__ = [
     "coin",
     "initialize",
@@ -27,13 +27,10 @@ __all__ = [
     "initialize_neighborhood_state",
     "initialize_uniform_state",
     "modulus",
-    "notunitary",
     "oracle",
     "prob",
-    "process",
     "qsearch",
     "search_times",
     "shift",
     "simulate",
-    "unitary",
 ]
